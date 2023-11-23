@@ -5,6 +5,7 @@ import { Response, buildErrorResponse, buildSuccessResponse } from "src/adapters
 import { ID, IDParser, Message, buildAuthorizationHeader, messageParser } from "src/adapters/api";
 import { datetimeParser, getListParser, getStrictParser } from "src/adapters/parsers";
 import { Credential, Env, IssuedQRCode, Json, Link, LinkStatus, ProofType } from "src/domain";
+import { CreateAuthRequestResponse } from "src/domain/credential";
 import { API_VERSION, QUERY_SEARCH_PARAM, STATUS_SEARCH_PARAM } from "src/utils/constants";
 import { List } from "src/utils/types";
 
@@ -53,6 +54,39 @@ export const credentialParser = getStrictParser<CredentialInput, Credential>()(
   })
 );
 
+export const CreateAuthRequestParser = getStrictParser<
+  CreateAuthRequestResponse,
+  CreateAuthRequestResponse
+>()(
+  z.object({
+    body: z.object({
+      callbackUrl: z.string(),
+      reason: z.string(),
+      scope: z.array(
+        z.object({
+          circuitId: z.string(),
+          id: z.number(),
+          query: z.object({
+            allowedIssuers: z.array(z.string()),
+            context: z.string(),
+            credentialSubject: z.object({
+              "Adhar-number": z.number(),
+              Age: z.number(),
+              id: z.string(),
+              type: z.string(),
+            }),
+            type: z.string(),
+          }),
+        })
+      ),
+    }),
+    from: z.string(),
+    id: z.string(),
+    thid: z.string(),
+    typ: z.string(),
+    type: z.string(),
+  })
+);
 export type CredentialStatus = "all" | "revoked" | "expired";
 
 export const credentialStatusParser = getStrictParser<CredentialStatus>()(
@@ -504,6 +538,30 @@ export async function getImportQRCode({
       url: `${API_VERSION}/credentials/links/${linkID}/qrcode`,
     });
     return buildSuccessResponse(importQRCodeParser.parse(response.data));
+  } catch (error) {
+    return buildErrorResponse(error);
+  }
+}
+
+export async function createAuthRequest({
+  env,
+  payload,
+}: {
+  env: Env;
+  payload: Credential;
+}): Promise<Response<CreateAuthRequestResponse>> {
+  try {
+    const response = await axios({
+      baseURL: env.api.url,
+      data: payload,
+      headers: {
+        Authorization: buildAuthorizationHeader(env),
+      },
+      method: "POST",
+      url: `${API_VERSION}/createAuthRequest`,
+    });
+    console.log(response.data);
+    return buildSuccessResponse(CreateAuthRequestParser.parse(response.data));
   } catch (error) {
     return buildErrorResponse(error);
   }

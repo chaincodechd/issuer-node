@@ -15,6 +15,7 @@ import dayjs from "dayjs";
 import { useCallback, useEffect, useState } from "react";
 import { generatePath, useNavigate, useSearchParams } from "react-router-dom";
 
+import { CreateAuthRequestModal } from "../shared/CreateAuthRequestModal";
 import { VerifyCredentialUser } from "../shared/VerifyCredentialUser";
 import { credentialStatusParser, getCredentials } from "src/adapters/api/credentials";
 import { ReactComponent as IconCreditCardRefresh } from "src/assets/icons/credit-card-refresh.svg";
@@ -67,7 +68,7 @@ export function CredentialsTable() {
   const [credentialToDelete, setCredentialToDelete] = useState<Credential>();
   const [credentialToRevoke, setCredentialToRevoke] = useState<Credential>();
   const [verifyCredentialForRequest, setVerifyCredentialForRequest] = useState<Credential>();
-
+  const [createAuthForRequest, setCreateAuthForRequest] = useState<Credential>();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const statusParam = searchParams.get(STATUS_SEARCH_PARAM);
@@ -179,7 +180,7 @@ export function CredentialsTable() {
                         icon: <IconInfoCircle />,
                         key: "details",
                         label: REQUEST_FOR_VC,
-                        onClick: () => setVerifyCredentialForRequest(credential),
+                        onClick: () => setCreateAuthForRequest(credential),
                       },
                     ]
                   : [
@@ -527,6 +528,12 @@ export function CredentialsTable() {
         <VerifyCredentialUser
           credential={verifyCredentialForRequest}
           onClose={() => setVerifyCredentialForRequest(undefined)}
+        />
+      )}
+      {createAuthForRequest && (
+        <CreateAuthRequestModal
+          credential={createAuthForRequest}
+          onClose={() => setCreateAuthForRequest(undefined)}
         />
       )}
     </>

@@ -42,3 +42,29 @@ export type Link = {
   schemaUrl: string;
   status: LinkStatus;
 };
+export type CreateAuthRequestResponse = {
+  body: {
+    callbackUrl: string;
+    reason: string;
+    scope: {
+      circuitId: string;
+      id: number;
+      query: {
+        allowedIssuers: string[];
+        context: string;
+        credentialSubject: {
+          "Adhar-number": number;
+          Age: number;
+          id: string;
+          type: string;
+        };
+        type: string;
+      };
+    }[];
+  };
+  from: string;
+  id: string;
+  thid: string;
+  typ: string;
+  type: string;
+};

@@ -35,7 +35,6 @@ import {
 } from "src/utils/constants";
 import { notifyParseErrors } from "src/utils/error";
 import { formatDate } from "src/utils/forms";
-
 export function RequestsTable() {
   const env = useEnvContext();
   // const { userDID } = useUserContext();
@@ -146,14 +145,15 @@ export function RequestsTable() {
                       //   type: "divider",
                       // },
                       {
-                        disabled: request.request_status == "Identity is Verified",
+                        disabled: request.request_status == "Identity is Verified" || "VC Issued",
                         icon: <IconInfoCircle />,
                         key: "verify",
                         label: VERIFY_IDENTITY,
                         onClick: () => setVerifyIdentityForRequest(request),
                       },
                       {
-                        disabled: request.request_status == "Pending for KYC verification",
+                        disabled:
+                          request.request_status == "Pending for KYC verification" || "VC Issued",
                         icon: <IconInfoCircle />,
                         key: "issue",
                         label: ISSUE_CREDENTIAL,
@@ -161,7 +161,7 @@ export function RequestsTable() {
                       },
                       {
                         danger: true,
-                        disabled: request.Active,
+                        disabled: request.request_status == "Pending for KYC verification",
                         icon: <IconClose />,
                         key: "revoke",
                         label: REVOKE,
