@@ -548,7 +548,7 @@ export async function createAuthRequest({
   payload,
 }: {
   env: Env;
-  payload: Credential;
+  payload: Request;
 }): Promise<Response<CreateAuthRequestResponse>> {
   try {
     const response = await axios({
@@ -560,7 +560,7 @@ export async function createAuthRequest({
       method: "POST",
       url: `${API_VERSION}/createAuthRequest`,
     });
-    console.log(response.data);
+
     return buildSuccessResponse(CreateAuthRequestParser.parse(response.data));
   } catch (error) {
     return buildErrorResponse(error);

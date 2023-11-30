@@ -120,7 +120,7 @@ export async function getRequests({
   try {
     let response;
     let response1;
-    // let response2;
+    let response2;
     if (User === "verifier" || User === "issuer") {
       response = await axios({
         baseURL: env.api.url,
@@ -160,24 +160,33 @@ export async function getRequests({
         signal,
         url: `${API_VERSION}/requests/all`,
       });
-      // response2 = await axios({
-      //   baseURL: env.api.url,
-      //   data: { Request_type: "VerifyVC", UserDID: query },
-      //   headers: {
-      //     Authorization: buildAuthorizationHeader(env),
-      //   },
-      //   method: "POST",
-      //   params: new URLSearchParams({
-      //     ...(did !== undefined ? { did } : {}),
-      //     ...(query !== undefined ? { [QUERY_SEARCH_PARAM]: query } : {}),
-      //     ...(status !== undefined && status !== "all" ? { [STATUS_SEARCH_PARAM]: status } : {}),
-      //   }),
-      //   signal,
-      //   url: `${API_VERSION}/requests/all`,
-      // });
+      response2 = await axios({
+        baseURL: env.api.url,
+        data: { Request_type: "VerifyVC", UserDID: query },
+        headers: {
+          Authorization: buildAuthorizationHeader(env),
+        },
+        method: "POST",
+        params: new URLSearchParams({
+          ...(did !== undefined ? { did } : {}),
+          ...(query !== undefined ? { [QUERY_SEARCH_PARAM]: query } : {}),
+          ...(status !== undefined && status !== "all" ? { [STATUS_SEARCH_PARAM]: status } : {}),
+        }),
+        signal,
+        url: `${API_VERSION}/requests/all`,
+      });
       response = response1;
-
-      // response.data = [...response.data, ...response2.data];
+      if (User === "verifier" || User === "issuer") {
+        response = response1;
+      } else {
+        {
+          /* eslint-disable */
+        }
+        response.data = [...response.data, ...response2.data];
+        {
+          /* eslint-disable */
+        }
+      }
     }
 
     return buildSuccessResponse(

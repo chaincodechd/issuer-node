@@ -15,7 +15,8 @@ export type RouteID =
   | "schemaDetails"
   | "notification"
   | "request"
-  | "createRequest";
+  | "createRequest"
+  | "qrCodeDisplay";
 
 export type Layout = "fullWidth" | "fullWidthGrey" | "sider";
 
@@ -87,6 +88,10 @@ export const ROUTES: Routes = {
   profile: {
     layout: "sider",
     path: "/profile",
+  },
+  qrCodeDisplay: {
+    layout: "fullWidthGrey",
+    path: `/verifyCred/QR/:credentialID`,
   },
   request: {
     layout: "sider",

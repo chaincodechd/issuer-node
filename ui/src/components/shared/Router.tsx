@@ -4,6 +4,7 @@ import { Login } from "../Login/login";
 import { Notification } from "../notifications/Notification";
 import { Profile } from "../profile/Profile";
 import { CreateRequest } from "../request/CreateRequest";
+import { QRCodeDisplay } from "../request/QRCodeDisplay";
 import { Request } from "../request/Request";
 import { ConnectionDetails } from "src/components/connections/ConnectionDetails";
 import { ConnectionsTable } from "src/components/connections/ConnectionsTable";
@@ -35,6 +36,7 @@ const COMPONENTS: Record<RouteID, ComponentType> = {
   notFound: NotFound,
   notification: Notification,
   profile: Profile,
+  qrCodeDisplay: QRCodeDisplay,
   request: Request,
 };
 

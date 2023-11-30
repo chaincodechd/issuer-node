@@ -2,22 +2,13 @@ import { Modal, message } from "antd";
 import { useState } from "react";
 
 import { ReactComponent as IconClose } from "src/assets/icons/x.svg";
-import { Credential } from "src/domain";
 import { CLOSE, ISSUE_CREDENTIAL } from "src/utils/constants";
 
-export function VerifyCredentialUser({
-  credential,
-  onClose,
-}: {
-  credential: Credential;
-  onClose: () => void;
-}) {
-  const [messageAPI, messageContext] = message.useMessage();
-
+export function VerifyCredentialUser({ onClose }: { onClose: () => void }) {
+  const [messageContext] = message.useMessage();
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const handleVerificationRequest = () => {
-    console.log("-------------", messageAPI, credential);
     setIsLoading(true);
 
     // const payload = {

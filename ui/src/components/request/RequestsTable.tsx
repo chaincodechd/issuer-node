@@ -4,6 +4,7 @@ import dayjs from "dayjs";
 import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
+import { CreateAuthRequestModal } from "../shared/CreateAuthRequestModal";
 import { IssueCredentialUser } from "../shared/IssueCredentialUser";
 import { RequestDeleteModal } from "../shared/RequestDeleteModal";
 import { RequestRevokeModal } from "../shared/RequestRevokeModal";
@@ -49,6 +50,7 @@ export function RequestsTable() {
   const [requestToRevoke, setRequestToRevoke] = useState<Request>();
   const [issueCredentialForRequest, setIssueCredentialForRequest] = useState<Request>();
   const [verifyIdentityForRequest, setVerifyIdentityForRequest] = useState<Request>();
+  const [createAuthRequest, setcreateAuthRequest] = useState<Request>();
 
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -145,15 +147,14 @@ export function RequestsTable() {
                       //   type: "divider",
                       // },
                       {
-                        disabled: request.request_status == "Identity is Verified" || "VC Issued",
+                        disabled: request.request_status == "Identity is Verified",
                         icon: <IconInfoCircle />,
                         key: "verify",
                         label: VERIFY_IDENTITY,
                         onClick: () => setVerifyIdentityForRequest(request),
                       },
                       {
-                        disabled:
-                          request.request_status == "Pending for KYC verification" || "VC Issued",
+                        disabled: request.request_status == "Pending for KYC verification",
                         icon: <IconInfoCircle />,
                         key: "issue",
                         label: ISSUE_CREDENTIAL,
@@ -214,6 +215,7 @@ export function RequestsTable() {
           </Tooltip>
         ),
         title: "Request Id",
+        width: "40%",
       },
       {
         dataIndex: "credential_type",
@@ -244,6 +246,7 @@ export function RequestsTable() {
           </Tooltip>
         ),
         title: "Status",
+        width: "10%",
       },
       {
         dataIndex: "created_at",
@@ -309,6 +312,12 @@ export function RequestsTable() {
                       {
                         key: "divider1",
                         type: "divider",
+                      },
+                      {
+                        danger: true,
+                        key: "verify",
+                        label: "Show Details",
+                        onClick: () => setcreateAuthRequest(request),
                       },
                       {
                         danger: true,
@@ -493,6 +502,12 @@ export function RequestsTable() {
           onClose={() => setVerifyIdentityForRequest(undefined)}
           onVerify={() => void fetchRequests()}
           request={verifyIdentityForRequest}
+        />
+      )}
+      {createAuthRequest && (
+        <CreateAuthRequestModal
+          onClose={() => setcreateAuthRequest(undefined)}
+          request={createAuthRequest}
         />
       )}
     </>

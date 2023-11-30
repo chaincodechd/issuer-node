@@ -14,8 +14,7 @@ import Table, { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import { useCallback, useEffect, useState } from "react";
 import { generatePath, useNavigate, useSearchParams } from "react-router-dom";
-
-import { CreateAuthRequestModal } from "../shared/CreateAuthRequestModal";
+import { VerifierRequestVCModal } from "../shared/VerifierRequestForVCModal";
 import { VerifyCredentialUser } from "../shared/VerifyCredentialUser";
 import { credentialStatusParser, getCredentials } from "src/adapters/api/credentials";
 import { ReactComponent as IconCreditCardRefresh } from "src/assets/icons/credit-card-refresh.svg";
@@ -34,14 +33,12 @@ import { ROUTES } from "src/routes";
 import { AsyncTask, isAsyncTaskDataAvailable, isAsyncTaskStarting } from "src/utils/async";
 import { isAbortedError, makeRequestAbortable } from "src/utils/browser";
 import {
-  //VERIFY_IDENTITY,
   DELETE,
   DETAILS,
   DOTS_DROPDOWN_WIDTH,
   EXPIRATION,
   EXPIRED,
   ISSUED,
-  ISSUE_CREDENTIAL,
   ISSUE_DATE,
   QUERY_SEARCH_PARAM,
   REQUEST_FOR_VC,
@@ -49,7 +46,6 @@ import {
   REVOKE,
   REVOKE_DATE,
   STATUS_SEARCH_PARAM,
-  VERIFY_IDENTITY,
 } from "src/utils/constants";
 import { notifyParseError, notifyParseErrors } from "src/utils/error";
 import { formatDate } from "src/utils/forms";
@@ -68,7 +64,7 @@ export function CredentialsTable() {
   const [credentialToDelete, setCredentialToDelete] = useState<Credential>();
   const [credentialToRevoke, setCredentialToRevoke] = useState<Credential>();
   const [verifyCredentialForRequest, setVerifyCredentialForRequest] = useState<Credential>();
-  const [createAuthForRequest, setCreateAuthForRequest] = useState<Credential>();
+  const [verifierVCRequest, setVerifierVCRequest] = useState<Credential>();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const statusParam = searchParams.get(STATUS_SEARCH_PARAM);
@@ -123,6 +119,7 @@ export function CredentialsTable() {
         ),
         responsive: ["md"],
         title: EXPIRED,
+        width: "10%",
       },
       {
         dataIndex: "revoked",
@@ -180,7 +177,7 @@ export function CredentialsTable() {
                         icon: <IconInfoCircle />,
                         key: "details",
                         label: REQUEST_FOR_VC,
-                        onClick: () => setCreateAuthForRequest(credential),
+                        onClick: () => setVerifierVCRequest(credential),
                       },
                     ]
                   : [
@@ -275,6 +272,7 @@ export function CredentialsTable() {
         ),
         responsive: ["md"],
         title: REVOCATION,
+        width: "15%",
       },
       {
         dataIndex: "expiresAt",
@@ -289,7 +287,7 @@ export function CredentialsTable() {
           ) : (
             "-"
           ),
-        responsive: ["sm"],
+        responsive: ["md"],
         sorter: ({ expiresAt: a }, { expiresAt: b }) => {
           if (a && b) {
             return dayjs(a).unix() - dayjs(b).unix();
@@ -526,14 +524,14 @@ export function CredentialsTable() {
       )}
       {verifyCredentialForRequest && (
         <VerifyCredentialUser
-          credential={verifyCredentialForRequest}
+          // credential={verifyCredentialForRequest}
           onClose={() => setVerifyCredentialForRequest(undefined)}
         />
       )}
-      {createAuthForRequest && (
-        <CreateAuthRequestModal
-          credential={createAuthForRequest}
-          onClose={() => setCreateAuthForRequest(undefined)}
+      {verifierVCRequest && (
+        <VerifierRequestVCModal
+          onClose={() => setVerifierVCRequest(undefined)}
+          request={verifierVCRequest}
         />
       )}
     </>

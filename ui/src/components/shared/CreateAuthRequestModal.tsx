@@ -1,18 +1,21 @@
 import { Modal, message } from "antd";
 import { useState } from "react";
+import { generatePath, useNavigate } from "react-router-dom";
 import { createAuthRequest } from "src/adapters/api/credentials";
 import { ReactComponent as IconClose } from "src/assets/icons/x.svg";
 import { useEnvContext } from "src/contexts/Env";
-import { Credential } from "src/domain";
+import { Request } from "src/domain";
+import { ROUTES } from "src/routes";
 import { CLOSE, VERIFY_IDENTITY } from "src/utils/constants";
 
 export function CreateAuthRequestModal({
-  credential,
   onClose,
+  request,
 }: {
-  credential: Credential;
   onClose: () => void;
+  request: Request;
 }) {
+  const navigate = useNavigate();
   const env = useEnvContext();
 
   const [messageAPI, messageContext] = message.useMessage();
@@ -23,18 +26,22 @@ export function CreateAuthRequestModal({
     setIsLoading(true);
 
     const payload = {
-      cred_id: credential.id,
+      cred_id: request.proof_id,
     };
-    void createAuthRequest({ env, payload }).then((response) => {
-      if (response.success) {
-        onClose();
-        void messageAPI.success("verified");
-      } else {
-        void messageAPI.error(response.error.message);
-      }
 
-      setIsLoading(false);
-    });
+    createAuthRequest({ env, payload })
+      .then((response) => {
+        if (response.success) {
+          void navigate(
+            generatePath(ROUTES.qrCodeDisplay.path.replace(":credentialID", request.proof_id)),
+            { state: { data: response.data } }
+          );
+        } else {
+          void messageAPI.error(response.error.message);
+        }
+        setIsLoading(false);
+      })
+      .catch((error) => console.log(error));
   };
 
   return (
@@ -50,7 +57,7 @@ export function CreateAuthRequestModal({
         okButtonProps={{ danger: true, loading: isLoading }}
         okText={VERIFY_IDENTITY}
         onCancel={onClose}
-        onOk={handleCreateAuthRequest}
+        onOk={() => void handleCreateAuthRequest()}
         open
         title="Are you sure you want to verify this identity?"
       >
