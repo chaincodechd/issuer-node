@@ -14,7 +14,13 @@ export function VerifierRequestVCModal({
   request: Credential;
 }) {
   const env = useEnvContext();
-
+  {
+    /* eslint-disable */
+  }
+  const age = `${request.credentialSubject.Age}`;
+  {
+    /* eslint-disable */
+  }
   const [messageAPI, messageContext] = message.useMessage();
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -23,7 +29,7 @@ export function VerifierRequestVCModal({
     setIsLoading(true);
 
     const payload = {
-      Age: "18",
+      Age: age,
       ProofId: request.id,
       ProofType: "Adhar",
       RequestType: "VerifyVC",
