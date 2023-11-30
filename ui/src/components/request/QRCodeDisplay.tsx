@@ -15,8 +15,6 @@ export function QRCodeDisplay() {
     /* eslint-disable */
   }
   const { issuer } = useEnvContext();
-  console.log(location.state);
-
   const { lg } = Grid.useBreakpoint();
   return (
     <Space align="center" direction="vertical" size="large">

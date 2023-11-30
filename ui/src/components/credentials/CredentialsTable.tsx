@@ -263,6 +263,7 @@ export function CredentialsTable() {
         ),
         responsive: ["md"],
         title: EXPIRED,
+        width: "10%",
       },
       {
         dataIndex: "revoked",
