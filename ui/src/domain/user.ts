@@ -60,3 +60,20 @@ export type UserResponse = {
   msg: string;
   status: boolean;
 };
+
+export type DigiLockerLoginResponse = {
+  created: string;
+  id: string;
+  ttl: number;
+  userId: string;
+};
+
+export type DigiLockerCreateUrlResponse = {
+  id: string;
+  patronId: string;
+  result: {
+    requestId: string;
+    url: string;
+  };
+  task: string;
+};

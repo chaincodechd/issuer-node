@@ -17,6 +17,7 @@ export const Login = () => {
     console.log("Received values of form: ", values);
     if (values.username !== "issuer" && values.username !== "verifier") {
       try {
+        console.log(env);
         const userDetails = await login({
           env,
           password: values.password,

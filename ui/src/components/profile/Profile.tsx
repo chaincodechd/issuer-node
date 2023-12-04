@@ -15,7 +15,7 @@ import {
 
 import { useEffect, useState } from "react";
 import { UploadDoc } from "../shared/Upload";
-import { getUser, updateUser } from "src/adapters/api/user";
+import { DigiLockerLogin, getDigiLockerUrl, getUser, updateUser } from "src/adapters/api/user";
 import { SiderLayoutContent } from "src/components/shared/SiderLayoutContent";
 
 import { useEnvContext } from "src/contexts/Env";
@@ -26,8 +26,9 @@ import { PROFILE, PROFILE_DETAILS, VALUE_REQUIRED } from "src/utils/constants";
 export function Profile() {
   const { fullName, gmail, userDID, userType } = useUserContext();
   // const userDID = localStorage.getItem("userId");
-  console.log(userDID);
-
+  // console.log(userDID)
+  const [countdown, setCountdown] = useState(300); // 5 minutes in seconds
+  const [openVerificationModal, setOpenVerificationModal] = useState<boolean>(false);
   const [openModal, setOpenModal] = useState<boolean>(false);
   const [userProfileData, setUserProfileData] = useState<UserDetails>();
   const env = useEnvContext();
@@ -39,6 +40,40 @@ export function Profile() {
   const handleCancel = () => {
     setOpenModal(false);
   };
+  const handleNavigate = (url: string) => {
+    window.open(url, "_blank");
+  };
+  const handleVerifyKYC = async () => {
+    try {
+      // console.log(process,process.env,">>>>>>>>>")
+      const userDetails = await DigiLockerLogin({
+        /* eslint-disable */
+        username: `${import.meta.env.VITE_API_DIGI_LOCKER_USERNAME}`,
+        password: `${import.meta.env.VITE_API_DIGI_LOCKER_PASSWORD}`,
+        /* eslint-disable */
+      });
+      //console.log(userDetails);
+      if (userDetails.success) {
+        const digiLockerUrlDetails = await getDigiLockerUrl({
+          userId: userDetails.data.userId,
+          id: userDetails.data.id,
+        });
+        if (digiLockerUrlDetails.success) {
+          setOpenVerificationModal(true);
+          handleNavigate(digiLockerUrlDetails.data.result.url);
+        }
+      } else {
+        void messageAPI.error("Wrong Credentials");
+      }
+    } catch (error) {
+      console.error("An error occurred:", error);
+    }
+  };
+
+  const handleClose = () => {
+    setOpenVerificationModal(false);
+  };
+
   const handleOk = () => {
     form
       .validateFields()
@@ -81,6 +116,11 @@ export function Profile() {
       });
   };
 
+  const handleLogout = () => {
+    //console.log("User logged out");
+    setOpenVerificationModal(false);
+  };
+
   useEffect(() => {
     if (ProfileStatus === "true") {
       const getUserDetails = async () => {
@@ -96,16 +136,43 @@ export function Profile() {
         console.error("An error occurred:", e);
       });
     }
-  }, [ProfileStatus, userDID, env]);
+
+    let timer: NodeJS.Timeout;
+    if (openVerificationModal) {
+      timer = setInterval(() => {
+        setCountdown((prevCountdown) => prevCountdown - 1);
+        if (countdown === 0) {
+          clearInterval(timer);
+          setOpenVerificationModal(false);
+        }
+      }, 1000);
+    }
+    return () => {
+      clearInterval(timer);
+    };
+  }, [ProfileStatus, userDID, env, openVerificationModal, countdown]);
+
+  // Calculate minutes and seconds
+  const minutes = Math.floor(countdown / 60);
+  const seconds = countdown % 60;
+
+  // Format the countdown as "mm:ss"
+  const formattedCountdown = `${minutes}:${seconds < 10 ? `0${seconds}` : seconds}`;
+
   return (
     <>
       {messageContext}
       <SiderLayoutContent title={PROFILE}>
         <Divider />
         <Space className="d-flex" direction="vertical">
-          <Button onClick={() => setOpenModal(true)} type="primary">
-            Update
-          </Button>
+          <Space>
+            <Button onClick={() => setOpenModal(true)} type="primary">
+              Update Manually
+            </Button>
+            <Button onClick={() => handleVerifyKYC()} type="primary">
+              Update With Digilocker
+            </Button>
+          </Space>
           <Row gutter={50}>
             <Col span={12}>
               <div
@@ -242,6 +309,28 @@ export function Profile() {
             <Input placeholder="Mobile Number" style={{ color: "#868686" }} />
           </Form.Item>
         </Form>
+      </Modal>
+      <Modal
+        footer={[
+          <Button key="yes" type="primary">
+            Yes
+          </Button>,
+          <Button key="logout" onClick={handleLogout}>
+            Logout
+          </Button>,
+        ]}
+        onCancel={handleClose}
+        open={openVerificationModal}
+        style={{
+          textAlign: "center",
+          top: 80,
+        }}
+        title="Digilocker Verification"
+      >
+        <p>Is Digilocker authentication done?</p>
+        <Divider />
+        <p>The Digilocker link will be expired in {formattedCountdown} minutes.</p>
+        <Divider />
       </Modal>
     </>
   );

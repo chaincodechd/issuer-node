@@ -4,7 +4,14 @@ import { Response, buildErrorResponse, buildSuccessResponse } from "..";
 import { datetimeParser, getStrictParser } from "../parsers";
 import { buildAuthorizationHeader } from ".";
 import { Env } from "src/domain";
-import { Login, UserDetails, UserResponse, userProfile } from "src/domain/user";
+import {
+  DigiLockerCreateUrlResponse,
+  DigiLockerLoginResponse,
+  Login,
+  UserDetails,
+  UserResponse,
+  userProfile,
+} from "src/domain/user";
 import { API_VERSION } from "src/utils/constants";
 import { List } from "src/utils/types";
 
@@ -28,6 +35,32 @@ export const userParser = getStrictParser<UserDetails, UserDetails>()(
   })
 );
 
+export const digiLockerRsponse = getStrictParser<
+  DigiLockerLoginResponse,
+  DigiLockerLoginResponse
+>()(
+  z.object({
+    created: z.string(),
+    id: z.string(),
+    ttl: z.number(),
+    userId: z.string(),
+  })
+);
+
+export const digiLockerUrlResponse = getStrictParser<
+  DigiLockerCreateUrlResponse,
+  DigiLockerCreateUrlResponse
+>()(
+  z.object({
+    id: z.string(),
+    patronId: z.string(),
+    result: z.object({
+      requestId: z.string(),
+      url: z.string(),
+    }),
+    task: z.string(),
+  })
+);
 export const userResponseParser = getStrictParser<UserResponse, UserResponse>()(
   z.object({
     msg: z.string(),
@@ -143,6 +176,54 @@ export async function getUser({
     });
 
     return buildSuccessResponse(userParser.parse(response.data));
+  } catch (error) {
+    return buildErrorResponse(error);
+  }
+}
+
+export async function DigiLockerLogin({
+  password,
+  username,
+}: {
+  password: string;
+  username: string;
+}): Promise<Response<DigiLockerLoginResponse>> {
+  try {
+    const response = await axios({
+      // baseURL: env.api.url,
+      data: { password, username },
+      // headers: {
+      //   Authorization: buildAuthorizationHeader(env),
+      // },
+      method: "POST",
+      url: `https://preproduction.signzy.tech/api/v2/patrons/login`,
+    });
+
+    return buildSuccessResponse(digiLockerRsponse.parse(response.data));
+  } catch (error) {
+    return buildErrorResponse(error);
+  }
+}
+
+export async function getDigiLockerUrl({
+  id,
+  userId,
+}: {
+  id: string;
+  userId: string;
+}): Promise<Response<DigiLockerCreateUrlResponse>> {
+  try {
+    const response = await axios({
+      data: { task: "url" },
+      headers: {
+        Authorization: id,
+      },
+      method: "POST",
+      url: `https://preproduction.signzy.tech/api/v2/patrons/${userId}/digilockers`,
+    });
+    // console.log(response.data);
+
+    return buildSuccessResponse(digiLockerUrlResponse.parse(response.data));
   } catch (error) {
     return buildErrorResponse(error);
   }
