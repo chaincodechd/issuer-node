@@ -15,12 +15,23 @@ import {
 
 import { useEffect, useState } from "react";
 import { UploadDoc } from "../shared/Upload";
-import { DigiLockerLogin, getDigiLockerUrl, getUser, updateUser } from "src/adapters/api/user";
+import {
+  DigiLockerLogin,
+  getDigiLockerDetails,
+  getDigiLockerUrl,
+  getUser,
+  updateUser,
+} from "src/adapters/api/user";
 import { SiderLayoutContent } from "src/components/shared/SiderLayoutContent";
 
 import { useEnvContext } from "src/contexts/Env";
 import { useUserContext } from "src/contexts/UserDetails";
-import { FormValue, UserDetails } from "src/domain/user";
+import {
+  DigiLockerCreateUrlResponse,
+  DigiLockerLoginResponse,
+  FormValue,
+  UserDetails,
+} from "src/domain/user";
 import { PROFILE, PROFILE_DETAILS, VALUE_REQUIRED } from "src/utils/constants";
 
 export function Profile() {
@@ -36,6 +47,8 @@ export function Profile() {
   const [messageAPI, messageContext] = message.useMessage();
   const [form] = Form.useForm();
   const ProfileStatus = localStorage.getItem("profile");
+  const [response1, setResponse1] = useState<DigiLockerLoginResponse | null>(null);
+  const [response2, setResponse2] = useState<DigiLockerCreateUrlResponse | null>(null);
 
   const handleCancel = () => {
     setOpenModal(false);
@@ -43,28 +56,32 @@ export function Profile() {
   const handleNavigate = (url: string) => {
     window.open(url, "_blank");
   };
-  const handleVerifyKYC = async () => {
+  const handleVerifyKYC = () => {
     try {
-      // console.log(process,process.env,">>>>>>>>>")
-      const userDetails = await DigiLockerLogin({
+      void DigiLockerLogin({
         /* eslint-disable */
         username: `${import.meta.env.VITE_API_DIGI_LOCKER_USERNAME}`,
         password: `${import.meta.env.VITE_API_DIGI_LOCKER_PASSWORD}`,
         /* eslint-disable */
+      }).then((response) => {
+        if (response.success) {
+          setResponse1(response.data);
+          setOpenVerificationModal(true);
+          void getDigiLockerUrl({
+            userId: response.data.userId,
+            id: response.data.id,
+          }).then((newResponse) => {
+            if (newResponse.success) {
+              setResponse2(newResponse.data);
+              setOpenVerificationModal(true);
+              handleNavigate(newResponse.data.result.url);
+            }
+          });
+        } else {
+          void messageAPI.error("Wrong Credentials");
+        }
       });
       //console.log(userDetails);
-      if (userDetails.success) {
-        const digiLockerUrlDetails = await getDigiLockerUrl({
-          userId: userDetails.data.userId,
-          id: userDetails.data.id,
-        });
-        if (digiLockerUrlDetails.success) {
-          setOpenVerificationModal(true);
-          handleNavigate(digiLockerUrlDetails.data.result.url);
-        }
-      } else {
-        void messageAPI.error("Wrong Credentials");
-      }
     } catch (error) {
       console.error("An error occurred:", error);
     }
@@ -72,6 +89,22 @@ export function Profile() {
 
   const handleClose = () => {
     setOpenVerificationModal(false);
+  };
+
+  const handleYesClick = () => {
+    void getDigiLockerDetails({
+      userId: response1?.userId || "",
+      id: response1?.id || "",
+      requestId: response2?.result.requestId || "",
+    }).then((response) => {
+      if (response.success) {
+        console.log(response);
+        setOpenVerificationModal(false);
+      } else {
+        window.alert("please complete the step first");
+        void messageAPI.error(response.error.message);
+      }
+    });
   };
 
   const handleOk = () => {
@@ -312,7 +345,7 @@ export function Profile() {
       </Modal>
       <Modal
         footer={[
-          <Button key="yes" type="primary">
+          <Button key="yes" onClick={handleYesClick} type="primary">
             Yes
           </Button>,
           <Button key="logout" onClick={handleLogout}>

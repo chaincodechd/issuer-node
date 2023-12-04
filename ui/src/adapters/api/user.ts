@@ -61,6 +61,7 @@ export const digiLockerUrlResponse = getStrictParser<
     task: z.string(),
   })
 );
+
 export const userResponseParser = getStrictParser<UserResponse, UserResponse>()(
   z.object({
     msg: z.string(),
@@ -216,12 +217,39 @@ export async function getDigiLockerUrl({
     const response = await axios({
       data: { task: "url" },
       headers: {
+        Accept: "application/json",
         Authorization: id,
       },
       method: "POST",
       url: `https://preproduction.signzy.tech/api/v2/patrons/${userId}/digilockers`,
     });
     // console.log(response.data);
+
+    return buildSuccessResponse(digiLockerUrlResponse.parse(response.data));
+  } catch (error) {
+    return buildErrorResponse(error);
+  }
+}
+
+export async function getDigiLockerDetails({
+  id,
+  requestId,
+  userId,
+}: {
+  id: string;
+  requestId: string;
+  userId: string;
+}): Promise<Response<DigiLockerCreateUrlResponse>> {
+  try {
+    const response = await axios({
+      data: { essentials: { requestId: requestId }, task: "getDetails" },
+      headers: {
+        Authorization: id,
+      },
+      method: "POST",
+      url: `https://preproduction.signzy.tech/api/v2/patrons/${userId}/digilockers`,
+    });
+    console.log(response.data);
 
     return buildSuccessResponse(digiLockerUrlResponse.parse(response.data));
   } catch (error) {

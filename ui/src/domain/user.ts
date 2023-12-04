@@ -77,3 +77,13 @@ export type DigiLockerCreateUrlResponse = {
   };
   task: string;
 };
+
+export type DigiLockerDetailsResponse = {
+  digilockerid: string;
+  dob: string;
+  eaadhaar: string;
+  files: Array<string>;
+  gender: string;
+  name: string;
+  nameAsAdhar: string;
+};
