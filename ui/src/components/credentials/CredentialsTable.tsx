@@ -20,7 +20,7 @@ import { credentialStatusParser, getCredentials } from "src/adapters/api/credent
 import { ReactComponent as IconCreditCardRefresh } from "src/assets/icons/credit-card-refresh.svg";
 import { ReactComponent as IconDots } from "src/assets/icons/dots-vertical.svg";
 import { ReactComponent as IconInfoCircle } from "src/assets/icons/info-circle.svg";
-import { ReactComponent as IconTrash } from "src/assets/icons/trash-01.svg";
+// import { ReactComponent as IconTrash } from "src/assets/icons/trash-01.svg";
 import { ReactComponent as IconClose } from "src/assets/icons/x.svg";
 import { CredentialDeleteModal } from "src/components/shared/CredentialDeleteModal";
 import { CredentialRevokeModal } from "src/components/shared/CredentialRevokeModal";
@@ -33,7 +33,7 @@ import { ROUTES } from "src/routes";
 import { AsyncTask, isAsyncTaskDataAvailable, isAsyncTaskStarting } from "src/utils/async";
 import { isAbortedError, makeRequestAbortable } from "src/utils/browser";
 import {
-  DELETE,
+  // DELETE,
   DETAILS,
   DOTS_DROPDOWN_WIDTH,
   EXPIRATION,
@@ -82,6 +82,7 @@ export function CredentialsTable() {
     tableColumns = [
       {
         dataIndex: "userID",
+        ellipsis: { showTitle: false },
         key: "userDID",
         render: (userDID: Credential["userDID"]) => (
           <Tooltip placement="topLeft" title={userDID}>
@@ -93,6 +94,7 @@ export function CredentialsTable() {
       },
       {
         dataIndex: "id",
+        ellipsis: { showTitle: false },
         key: "schemaType",
         render: (schemaType: Credential["schemaType"]) => (
           <Tooltip placement="topLeft" title={schemaType}>
@@ -104,15 +106,18 @@ export function CredentialsTable() {
       },
       {
         dataIndex: "createdAt",
+        ellipsis: { showTitle: false },
         key: "createdAt",
         render: (createdAt: Credential["createdAt"]) => (
           <Typography.Text>{formatDate(createdAt)}</Typography.Text>
         ),
         sorter: ({ createdAt: a }, { createdAt: b }) => dayjs(a).unix() - dayjs(b).unix(),
         title: ISSUE_DATE,
+        width: "20%",
       },
       {
         dataIndex: "expired",
+        ellipsis: { showTitle: false },
         key: "expired",
         render: (expired: Credential["expired"]) => (
           <Typography.Text>{expired ? "Yes" : "No"}</Typography.Text>
@@ -123,15 +128,18 @@ export function CredentialsTable() {
       },
       {
         dataIndex: "revoked",
+        ellipsis: { showTitle: false },
         key: "revoked",
         render: (revoked: Credential["revoked"]) => (
           <Typography.Text>{revoked ? "Revoked" : "-"}</Typography.Text>
         ),
         responsive: ["md"],
         title: REVOCATION,
+        width: "10%",
       },
       {
         dataIndex: "expiresAt",
+        ellipsis: { showTitle: false },
         key: "expiresAt",
         render: (expiresAt: Credential["expiresAt"], credential: Credential) =>
           expiresAt ? (
@@ -143,7 +151,7 @@ export function CredentialsTable() {
           ) : (
             "-"
           ),
-        responsive: ["sm"],
+        //  responsive: ["sm"],
         sorter: ({ expiresAt: a }, { expiresAt: b }) => {
           if (a && b) {
             return dayjs(a).unix() - dayjs(b).unix();
@@ -154,15 +162,18 @@ export function CredentialsTable() {
           }
         },
         title: EXPIRATION,
+        width: "10%",
       },
       {
         dataIndex: "revokeDate",
+        ellipsis: { showTitle: false },
         key: "revokeDate",
         render: (revokeDate: Credential["revokeDate"]) => (
           <Typography.Text>{revokeDate ? formatDate(revokeDate) : "-"}</Typography.Text>
         ),
         sorter: ({ revokeDate: a }, { revokeDate: b }) => dayjs(a).unix() - dayjs(b).unix(),
         title: REVOKE_DATE,
+        width: "10%",
       },
       {
         dataIndex: "id",
@@ -174,7 +185,7 @@ export function CredentialsTable() {
                 User === "verifier"
                   ? [
                       {
-                        icon: <IconInfoCircle />,
+                        // icon: <IconInfoCircle />,
                         key: "details",
                         label: REQUEST_FOR_VC,
                         onClick: () => setVerifierVCRequest(credential),
@@ -216,13 +227,13 @@ export function CredentialsTable() {
                         key: "divider2",
                         type: "divider",
                       },
-                      {
-                        danger: true,
-                        icon: <IconTrash />,
-                        key: "delete",
-                        label: DELETE,
-                        onClick: () => setCredentialToDelete(credential),
-                      },
+                      // {
+                      //   danger: true,
+                      //   icon: <IconTrash />,
+                      //   key: "delete",
+                      //   label: DELETE,
+                      //   onClick: () => setCredentialToDelete(credential),
+                      // },
                     ],
             }}
           >
@@ -238,6 +249,7 @@ export function CredentialsTable() {
     tableColumns = [
       {
         dataIndex: "id",
+        ellipsis: { showTitle: false },
         key: "schemaType",
         render: (schemaType: Credential["schemaType"]) => (
           <Tooltip placement="topLeft" title={schemaType}>
@@ -245,18 +257,22 @@ export function CredentialsTable() {
           </Tooltip>
         ),
         title: "Credential",
+        width: "20%",
       },
       {
         dataIndex: "createdAt",
+        ellipsis: { showTitle: false },
         key: "createdAt",
         render: (createdAt: Credential["createdAt"]) => (
           <Typography.Text>{formatDate(createdAt)}</Typography.Text>
         ),
         sorter: ({ createdAt: a }, { createdAt: b }) => dayjs(a).unix() - dayjs(b).unix(),
         title: ISSUE_DATE,
+        width: "20%",
       },
       {
         dataIndex: "expired",
+        ellipsis: { showTitle: false },
         key: "expired",
         render: (expired: Credential["expired"]) => (
           <Typography.Text>{expired ? "Yes" : "No"}</Typography.Text>
@@ -277,6 +293,7 @@ export function CredentialsTable() {
       },
       {
         dataIndex: "expiresAt",
+        ellipsis: { showTitle: false },
         key: "expiresAt",
         render: (expiresAt: Credential["expiresAt"], credential: Credential) =>
           expiresAt ? (
@@ -299,15 +316,18 @@ export function CredentialsTable() {
           }
         },
         title: EXPIRATION,
+        width: "20%",
       },
       {
         dataIndex: "revokeDate",
+        ellipsis: { showTitle: false },
         key: "revokeDate",
         render: (revokeDate: Credential["revokeDate"]) => (
           <Typography.Text>{revokeDate ? formatDate(revokeDate) : "-"}</Typography.Text>
         ),
         sorter: ({ revokeDate: a }, { revokeDate: b }) => dayjs(a).unix() - dayjs(b).unix(),
         title: REVOKE_DATE,
+        width: "20%",
       },
       {
         dataIndex: "id",
@@ -339,13 +359,13 @@ export function CredentialsTable() {
                   key: "divider2",
                   type: "divider",
                 },
-                {
-                  danger: true,
-                  icon: <IconTrash />,
-                  key: "delete",
-                  label: DELETE,
-                  onClick: () => setCredentialToDelete(credential),
-                },
+                // {
+                //   danger: true,
+                //   icon: <IconTrash />,
+                //   key: "delete",
+                //   label: DELETE,
+                //   onClick: () => setCredentialToDelete(credential),
+                // },
               ],
             }}
           >
@@ -366,6 +386,7 @@ export function CredentialsTable() {
           ? { data: previousCredentials.data, status: "reloading" }
           : { status: "loading" }
       );
+      // console.log(UserDID);
 
       const response = await getCredentials({
         env,
@@ -458,7 +479,7 @@ export function CredentialsTable() {
         isLoading={isAsyncTaskStarting(credentials)}
         onSearch={onSearch}
         query={queryParam}
-        searchPlaceholder="Search credentials, attributes, identifiers..."
+        searchPlaceholder="Search UserDID..."
         showDefaultContents={showDefaultContent}
         table={
           User !== "verifier" || queryParam ? (
@@ -490,23 +511,43 @@ export function CredentialsTable() {
           )
         }
         title={
-          <Row gutter={[0, 8]} justify="space-between">
-            <Space size="middle">
+          User === "verifier" || queryParam ? (
+            <Row gutter={[0, 8]} justify="end">
+              {/* <Space size="middle">
               <Card.Meta title={ISSUED} />
 
               <Tag color="blue">{credentialsList.length}</Tag>
-            </Space>
+            </Space> */}
 
-            {(!showDefaultContent || credentialStatus !== "all") && (
-              <Radio.Group onChange={handleStatusChange} value={credentialStatus}>
-                <Radio.Button value="all">All</Radio.Button>
+              {(!showDefaultContent || credentialStatus !== "all") && (
+                <Radio.Group onChange={handleStatusChange} value={credentialStatus}>
+                  <Radio.Button value="all">All</Radio.Button>
 
-                <Radio.Button value="revoked">Revoked</Radio.Button>
+                  <Radio.Button value="revoked">Revoked</Radio.Button>
 
-                <Radio.Button value="expired">Expired</Radio.Button>
-              </Radio.Group>
-            )}
-          </Row>
+                  <Radio.Button value="expired">Expired</Radio.Button>
+                </Radio.Group>
+              )}
+            </Row>
+          ) : (
+            <Row gutter={[0, 8]} justify="space-between">
+              <Space size="middle">
+                <Card.Meta title={ISSUED} />
+
+                <Tag color="blue">{credentialsList.length}</Tag>
+              </Space>
+
+              {(!showDefaultContent || credentialStatus !== "all") && (
+                <Radio.Group onChange={handleStatusChange} value={credentialStatus}>
+                  <Radio.Button value="all">All</Radio.Button>
+
+                  <Radio.Button value="revoked">Revoked</Radio.Button>
+
+                  <Radio.Button value="expired">Expired</Radio.Button>
+                </Radio.Group>
+              )}
+            </Row>
+          )
         }
       />
       {credentialToDelete && (

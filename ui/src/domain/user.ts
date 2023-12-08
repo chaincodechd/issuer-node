@@ -1,21 +1,29 @@
+{
+  /* eslint-disable */
+}
 export type UserDetails = {
-  PAN: string;
   address: string;
   adhar: string;
+  adharStatus: boolean;
   createdAt: Date;
   dob: string;
   documentationSource: string;
   gmail: string;
   gstin: string;
+  gstinStatus: boolean;
   id: string;
   iscompleted: boolean;
   name: string;
+  PAN: string;
+  PANStatus: boolean;
   owner: string;
   phoneNumber: string;
-  userType: string;
   username: string;
+  userType: string;
 };
-
+{
+  /* eslint-disable */
+}
 export type userProfile = {
   Address: string;
   Adhar: string;
@@ -86,4 +94,13 @@ export type DigiLockerDetailsResponse = {
   gender: string;
   name: string;
   nameAsAdhar: string;
+};
+
+export type SignupResponse = {
+  msg: string;
+  status: boolean;
+};
+
+export type UserDIDResponse = {
+  identifier: string;
 };

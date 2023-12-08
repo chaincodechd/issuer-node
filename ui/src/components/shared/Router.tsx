@@ -1,6 +1,7 @@
 import { ComponentType } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { Login } from "../Login/login";
+import { SignUp } from "../Login/SignUp";
 import { Notification } from "../notifications/Notification";
 import { Profile } from "../profile/Profile";
 import { CreateRequest } from "../request/CreateRequest";
@@ -37,6 +38,7 @@ const COMPONENTS: Record<RouteID, ComponentType> = {
   notification: Notification,
   profile: Profile,
   qrCodeDisplay: QRCodeDisplay,
+  register: SignUp,
   request: Request,
 };
 

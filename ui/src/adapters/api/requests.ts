@@ -251,6 +251,7 @@ export async function requestVC({
       method: "POST",
       url: `${API_VERSION}/requestForVC`,
     });
+    console.log(response.data);
     return buildSuccessResponse(RequestVcParser.parse(response.data));
   } catch (error) {
     return buildErrorResponse(error);
@@ -362,7 +363,7 @@ export async function verifyIdentityRequest({
       method: "POST",
       url: `${API_VERSION}/VerifyRequest/${id}`,
     });
-    console.log("data is ......", response);
+    console.log("data is ......", response.data);
     return buildSuccessResponse(VerifyIdentityParser.parse(response.data));
   } catch (error) {
     return buildErrorResponse(error);

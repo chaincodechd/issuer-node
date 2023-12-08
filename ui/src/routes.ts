@@ -16,8 +16,8 @@ export type RouteID =
   | "notification"
   | "request"
   | "createRequest"
-  | "qrCodeDisplay";
-
+  | "qrCodeDisplay"
+  | "register";
 export type Layout = "fullWidth" | "fullWidthGrey" | "sider";
 
 type Routes = Record<
@@ -92,6 +92,10 @@ export const ROUTES: Routes = {
   qrCodeDisplay: {
     layout: "fullWidthGrey",
     path: `/verifyCred/QR/:credentialID`,
+  },
+  register: {
+    layout: "fullWidth",
+    path: "/register",
   },
   request: {
     layout: "sider",

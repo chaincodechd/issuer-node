@@ -250,7 +250,7 @@ export function CredentialsTable({ userID }: { userID: string }) {
         isLoading={isAsyncTaskStarting(credentials)}
         onSearch={setQuery}
         query={query}
-        searchPlaceholder="Search credentials, attributes..."
+        searchPlaceholder="Search UserDID..."
         showDefaultContents={showDefaultContent}
         table={
           <Table

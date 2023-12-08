@@ -84,7 +84,7 @@ export const POLLING_INTERVAL = 10000;
 
 export const ROOT_PATH = "/";
 
-export const SIDER_WIDTH = 320;
+export const SIDER_WIDTH = 280;
 
 export const TOAST_NOTIFICATION_TIMEOUT = 6;
 

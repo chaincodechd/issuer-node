@@ -1,10 +1,15 @@
 import { Modal, message } from "antd";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { requestVC } from "src/adapters/api/requests";
+import { getAllSchema } from "src/adapters/api/schemas";
 import { ReactComponent as IconClose } from "src/assets/icons/x.svg";
 import { useEnvContext } from "src/contexts/Env";
-import { Credential } from "src/domain";
+import { AppError, Credential } from "src/domain";
+import { Schema } from "src/domain/schema";
+import { AsyncTask, isAsyncTaskDataAvailable } from "src/utils/async";
+import { isAbortedError } from "src/utils/browser";
 import { CLOSE, VERIFY_IDENTITY } from "src/utils/constants";
+import { notifyParseErrors } from "src/utils/error";
 
 export function VerifierRequestVCModal({
   onClose,
@@ -14,6 +19,33 @@ export function VerifierRequestVCModal({
   request: Credential;
 }) {
   const env = useEnvContext();
+  const [schemaData, setSchemaData] = useState<AsyncTask<Schema[], AppError>>({
+    status: "pending",
+  });
+  const schemaList = isAsyncTaskDataAvailable(schemaData) ? schemaData.data : [];
+  useEffect(() => {
+    const getSchemas = async () => {
+      const response = await getAllSchema({
+        env,
+      });
+      if (response.success) {
+        setSchemaData({
+          data: response.data.successful,
+          status: "successful",
+        });
+        notifyParseErrors(response.data.failed);
+      } else {
+        if (!isAbortedError(response.error)) {
+          setSchemaData({ error: response.error, status: "failed" });
+        }
+      }
+    };
+
+    getSchemas().catch((e) => {
+      console.error("An error occurred:", e);
+    });
+  }, [env]);
+
   {
     /* eslint-disable */
   }
@@ -26,6 +58,7 @@ export function VerifierRequestVCModal({
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const handleVerifierVCRequest = async () => {
+    const schema = schemaList.find((item) => item.type === request.credentialSubject.type);
     setIsLoading(true);
 
     const payload = {
@@ -34,7 +67,7 @@ export function VerifierRequestVCModal({
       ProofType: "Adhar",
       RequestType: "VerifyVC",
       RoleType: "Individual",
-      schemaID: "f880dc68-99c5-4f53-b974-7d0cef5ca4b7",
+      schemaID: schema?.id || "",
       Source: "Manual",
       userDID: request.userID,
     };

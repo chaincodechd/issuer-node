@@ -67,6 +67,7 @@ export function RequestsTable() {
     tableColumns = [
       {
         dataIndex: "id",
+        ellipsis: { showTitle: false },
         key: "requestId",
         render: (requestId: Request["requestId"]) => (
           <Tooltip placement="topLeft" title={requestId}>
@@ -78,6 +79,7 @@ export function RequestsTable() {
       },
       {
         dataIndex: "userDID",
+        ellipsis: { showTitle: false },
         key: "userDID",
         render: (userDID: Request["userDID"]) => (
           <Tooltip placement="topLeft" title={userDID}>
@@ -89,6 +91,7 @@ export function RequestsTable() {
       },
       {
         dataIndex: "credential_type",
+        ellipsis: { showTitle: false },
         key: "credentialType",
         render: (credentialType: Request["credentialType"]) => (
           <Tooltip placement="topLeft" title={credentialType}>
@@ -96,9 +99,11 @@ export function RequestsTable() {
           </Tooltip>
         ),
         title: "Credential Type",
+        width: "20%",
       },
       {
         dataIndex: "request_type",
+        ellipsis: { showTitle: false },
         key: "requestType",
         render: (requestType: Request["requestType"]) => (
           <Tooltip placement="topLeft" title={requestType}>
@@ -106,9 +111,11 @@ export function RequestsTable() {
           </Tooltip>
         ),
         title: "Request Type",
+        width: "20%",
       },
       {
         dataIndex: "request_status",
+        ellipsis: { showTitle: false },
         key: "status",
         render: (status: Request["request_status"]) => (
           <Tooltip placement="topLeft" title={status}>
@@ -116,15 +123,18 @@ export function RequestsTable() {
           </Tooltip>
         ),
         title: "Status",
+        width: "20%",
       },
       {
         dataIndex: "created_at",
+        ellipsis: { showTitle: false },
         key: "requestDate",
         render: (requestDate: Request["requestDate"]) => (
           <Typography.Text>{formatDate(requestDate)}</Typography.Text>
         ),
         sorter: ({ requestDate: a }, { requestDate: b }) => dayjs(a).unix() - dayjs(b).unix(),
         title: REQUEST_DATE,
+        width: "25%",
       },
       {
         dataIndex: "id",
@@ -147,45 +157,49 @@ export function RequestsTable() {
                       //   type: "divider",
                       // },
                       {
-                        disabled: request.request_status == "Identity is Verified",
+                        disabled:
+                          request.request_status == "Identity is Verified" ||
+                          ("VC Issued" && request.verifier_status !== "VC verification pending"),
                         icon: <IconInfoCircle />,
                         key: "verify",
                         label: VERIFY_IDENTITY,
                         onClick: () => setVerifyIdentityForRequest(request),
                       },
                       {
-                        disabled: request.request_status == "Pending for KYC verification",
+                        disabled:
+                          request.request_status == "Pending for KYC verification" ||
+                          request.verifier_status === "VC Issued",
                         icon: <IconInfoCircle />,
                         key: "issue",
                         label: ISSUE_CREDENTIAL,
                         onClick: () => setIssueCredentialForRequest(request),
                       },
-                      {
-                        danger: true,
-                        disabled: request.request_status == "Pending for KYC verification",
-                        icon: <IconClose />,
-                        key: "revoke",
-                        label: REVOKE,
-                        onClick: () => setRequestToRevoke(request),
-                      },
+                      // {
+                      //   danger: true,
+                      //   disabled: request.request_status == "Pending for KYC verification",
+                      //   icon: <IconClose />,
+                      //   key: "revoke",
+                      //   label: REVOKE,
+                      //   onClick: () => setRequestToRevoke(request),
+                      // },
                       {
                         key: "divider2",
                         type: "divider",
                       },
-                      {
-                        danger: true,
-                        icon: <IconTrash />,
-                        key: "delete",
-                        label: DELETE,
-                        onClick: () => setRequestToDelete(request),
-                      },
+                      // {
+                      //   danger: true,
+                      //   icon: <IconTrash />,
+                      //   key: "delete",
+                      //   label: DELETE,
+                      //   onClick: () => setRequestToDelete(request),
+                      // },
                     ]
                   : [
-                      {
-                        icon: <IconInfoCircle />,
-                        key: "verify",
-                        label: VERIFY_IDENTITY,
-                      },
+                      // {
+                      //   icon: <IconInfoCircle />,
+                      //   key: "verify",
+                      //   label: VERIFY_IDENTITY,
+                      // },
                       {
                         danger: true,
                         icon: <IconTrash />,
@@ -208,6 +222,7 @@ export function RequestsTable() {
     tableColumns = [
       {
         dataIndex: "id",
+        ellipsis: { showTitle: false },
         key: "requestId",
         render: (requestId: Request["requestId"]) => (
           <Tooltip placement="topLeft" title={requestId}>
@@ -215,10 +230,11 @@ export function RequestsTable() {
           </Tooltip>
         ),
         title: "Request Id",
-        width: "40%",
+        width: "20%",
       },
       {
         dataIndex: "credential_type",
+        ellipsis: { showTitle: false },
         key: "credentialType",
         render: (credentialType: Request["credentialType"]) => (
           <Tooltip placement="topLeft" title={credentialType}>
@@ -226,9 +242,11 @@ export function RequestsTable() {
           </Tooltip>
         ),
         title: "Credential Type",
+        width: "20%",
       },
       {
         dataIndex: "request_type",
+        ellipsis: { showTitle: false },
         key: "requestType",
         render: (requestType: Request["requestType"]) => (
           <Tooltip placement="topLeft" title={requestType}>
@@ -236,9 +254,11 @@ export function RequestsTable() {
           </Tooltip>
         ),
         title: "Request Type",
+        width: "20%",
       },
       {
         dataIndex: "Active",
+        ellipsis: { showTitle: false },
         key: "status",
         render: (status: Request["status"]) => (
           <Tooltip placement="topLeft" title={status}>
@@ -250,12 +270,14 @@ export function RequestsTable() {
       },
       {
         dataIndex: "created_at",
+        ellipsis: { showTitle: false },
         key: "requestDate",
         render: (requestDate: Request["requestDate"]) => (
           <Typography.Text>{formatDate(requestDate)}</Typography.Text>
         ),
         sorter: ({ requestDate: a }, { requestDate: b }) => dayjs(a).unix() - dayjs(b).unix(),
         title: REQUEST_DATE,
+        width: "20%",
       },
       {
         dataIndex: "id",
@@ -430,7 +452,7 @@ export function RequestsTable() {
         isLoading={isAsyncTaskStarting(requests)}
         onSearch={onSearch}
         query={queryParam}
-        searchPlaceholder="Search credentials, attributes, identifiers..."
+        searchPlaceholder="Search UserDID..."
         showDefaultContents={showDefaultContent}
         table={
           <Table
@@ -494,6 +516,7 @@ export function RequestsTable() {
       {issueCredentialForRequest && (
         <IssueCredentialUser
           onClose={() => setIssueCredentialForRequest(undefined)}
+          onIssue={() => void fetchRequests()}
           request={issueCredentialForRequest}
         />
       )}

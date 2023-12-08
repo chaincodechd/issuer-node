@@ -1,6 +1,7 @@
 import {
   Button,
   Card,
+  Checkbox,
   Col,
   Divider,
   Form,
@@ -9,6 +10,8 @@ import {
   Modal,
   Row,
   Space,
+  Table,
+  Tag,
   Typography,
   message,
 } from "antd";
@@ -50,12 +53,28 @@ export function Profile() {
   const [response1, setResponse1] = useState<DigiLockerLoginResponse | null>(null);
   const [response2, setResponse2] = useState<DigiLockerCreateUrlResponse | null>(null);
 
+  const [formValues, setFormValues] = useState<UserDetails>({
+    address: userProfileData?.address || "",
+
+    adhar: userProfileData?.adhar || "",
+    // ddress: userProfileData?.address || "",
+    dob: userProfileData?.dob || "",
+    gstin: userProfileData?.gstin || "",
+    owner: userProfileData?.owner || "",
+    PAN: userProfileData?.PAN || "",
+    phoneNumber: userProfileData?.phoneNumber || "",
+    //DocumentationSource: userProfileData?.documentationSource || "",
+    userType: userProfileData?.userType || "",
+  });
+
   const handleCancel = () => {
     setOpenModal(false);
   };
+
   const handleNavigate = (url: string) => {
     window.open(url, "_blank");
   };
+
   const handleVerifyKYC = () => {
     try {
       void DigiLockerLogin({
@@ -106,6 +125,8 @@ export function Profile() {
       }
     });
   };
+
+  // console.log(formValues);
 
   const handleOk = () => {
     form
@@ -164,6 +185,23 @@ export function Profile() {
         /* eslint-disable */
         setUserProfileData(response.data);
         /* eslint-enable */
+        {
+          /* eslint-disable */
+        }
+        setFormValues({
+          dob: response.data.dob,
+          Aadhar: response.data.adhar,
+          PAN: response.data.PAN,
+          owner: response.data.owner,
+          gst: response.data.gstin,
+          address: response.data.address,
+          mobile: response.data.phoneNumber,
+          DocumentationSource: response.data.documentationSource,
+          Owner: response.data.owner,
+        });
+        {
+          /* eslint-disable */
+        }
       };
       getUserDetails().catch((e) => {
         console.error("An error occurred:", e);
@@ -192,6 +230,55 @@ export function Profile() {
   // Format the countdown as "mm:ss"
   const formattedCountdown = `${minutes}:${seconds < 10 ? `0${seconds}` : seconds}`;
 
+  const columns = [
+    {
+      title: <strong>Document Type</strong>,
+      dataIndex: "documentType",
+      key: "documentType",
+    },
+    {
+      title: <strong>Document Number</strong>,
+      dataIndex: "documentNumber",
+      key: "documentNumber",
+    },
+    {
+      title: <strong>Status</strong>,
+      dataIndex: "status",
+      key: "status",
+      render: (status: boolean) => (
+        <Tag color={status ? "green" : "red"}>{status ? "Verified" : "Not Verified"}</Tag>
+      ),
+    },
+  ];
+  const data = [
+    {
+      key: "1",
+      documentType: "Aadhar",
+      documentNumber: userProfileData?.adhar || "-",
+      status: userProfileData?.adharStatus,
+    },
+    {
+      key: "2",
+      documentType: "PAN",
+      documentNumber: userProfileData?.PAN || "-",
+      status: userProfileData?.PANStatus,
+    },
+    {
+      key: "3",
+      documentType: "GSTIN",
+      documentNumber: userProfileData?.gstin || "-",
+      status: userProfileData?.gstinStatus,
+    },
+  ];
+
+  // Filter the 'data' array based on user type
+  const filteredData = data.filter((item) => {
+    return userProfileData?.userType === "Business" || item.documentType !== "GSTIN";
+  });
+  // const handleFormChange = (changedValues: any, allValues: FormValue) => {
+  //  // console.log(allValues);
+  //   setFormValues(allValues);
+  // };
   return (
     <>
       {messageContext}
@@ -216,10 +303,10 @@ export function Profile() {
                   borderRadius: "10px",
                   display: "flex",
                   flexDirection: "column",
-                  height: 400,
+                  height: 550,
                   justifyContent: "center",
                   textAlign: "center",
-                  width: 600,
+                  width: 480,
                 }}
               >
                 <Image src={src} style={{ borderRadius: 100, marginBottom: 10 }} width={200} />
@@ -235,7 +322,7 @@ export function Profile() {
               </div>
             </Col>
             <Col span={6}>
-              <Card style={{ height: 400, width: 600 }} title={PROFILE_DETAILS}>
+              <Card style={{ height: 550, width: 500, marginLeft: -28 }} title={PROFILE_DETAILS}>
                 <Row>
                   <Typography.Text strong>UDID:</Typography.Text>
                   <Typography.Text>{userDID || userProfileData?.id}</Typography.Text>
@@ -262,20 +349,40 @@ export function Profile() {
                   <Typography.Text strong>DOB</Typography.Text>
                   <Typography.Text>: {userProfileData?.dob}</Typography.Text>
                 </Row>
+                <Row style={{ marginTop: "10px" }}>
+                  <Checkbox value="Individual" checked={userProfileData?.userType === "Individual"}>
+                    <strong>Individual</strong>
+                  </Checkbox>
+                  <Checkbox value="Business" checked={userProfileData?.userType === "Business"}>
+                    <strong>Business</strong>
+                  </Checkbox>
+                </Row>
+                <Table
+                  style={{
+                    marginTop: 10,
+                    paddingBottom: 10,
+                    marginLeft: -15,
+                    textAlign: "center",
+                    width: 50,
+                  }}
+                  columns={columns}
+                  dataSource={filteredData}
+                  pagination={false}
+                />
               </Card>
             </Col>
           </Row>
         </Space>
       </SiderLayoutContent>
       <Modal onCancel={handleCancel} onOk={handleOk} open={openModal} title="Update Profile">
-        <Form form={form} layout="vertical">
+        <Form form={form} layout="vertical" initialValues={formValues}>
           <Form.Item
             label="DOB"
             name="dob"
             required
             rules={[{ message: VALUE_REQUIRED, required: true }]}
           >
-            <Input placeholder="DOB" style={{ color: "#868686" }} />
+            <Input placeholder="DOB" style={{ color: "#868686" }} disabled={!!userProfileData} />
           </Form.Item>
           <Form.Item
             label="Aadhar Number"
@@ -283,7 +390,11 @@ export function Profile() {
             required
             rules={[{ message: VALUE_REQUIRED, required: true }]}
           >
-            <Input placeholder="Aadhar Number" style={{ color: "#868686" }} />
+            <Input
+              placeholder="Aadhar Number"
+              style={{ color: "#868686" }}
+              disabled={!!userProfileData}
+            />
           </Form.Item>
           <Form.Item
             label="PAN"
@@ -291,7 +402,7 @@ export function Profile() {
             required
             rules={[{ message: VALUE_REQUIRED, required: true }]}
           >
-            <Input placeholder="PAN" style={{ color: "#868686" }} />
+            <Input placeholder="PAN" style={{ color: "#868686" }} disabled={!!userProfileData} />
           </Form.Item>
           <Form.Item
             label="User Type"
@@ -312,7 +423,11 @@ export function Profile() {
               required
               rules={[{ message: VALUE_REQUIRED, required: true }]}
             >
-              <Input placeholder="Owner" style={{ color: "#868686" }} />
+              <Input
+                placeholder="Owner"
+                style={{ color: "#868686" }}
+                disabled={!!userProfileData}
+              />
             </Form.Item>
           )}
           {userType !== "Individual" && (
@@ -322,7 +437,11 @@ export function Profile() {
               required
               rules={[{ message: VALUE_REQUIRED, required: true }]}
             >
-              <Input placeholder="GSTIN" style={{ color: "#868686" }} />
+              <Input
+                placeholder="GSTIN"
+                style={{ color: "#868686" }}
+                disabled={!!userProfileData}
+              />
             </Form.Item>
           )}
           <Form.Item

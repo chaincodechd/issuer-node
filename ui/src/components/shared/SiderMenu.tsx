@@ -6,12 +6,12 @@ import { ReactComponent as IconCredentials } from "src/assets/icons/credit-card-
 import { ReactComponent as IconLogout } from "src/assets/icons/logout-user.svg";
 import { ReactComponent as IconProfile } from "src/assets/icons/profile.svg";
 import { ReactComponent as IconRequest } from "src/assets/icons/switch-horizontal.svg";
-import { ReactComponent as IconConnections } from "src/assets/icons/users-01.svg";
+// import { ReactComponent as IconConnections } from "src/assets/icons/users-01.svg";
 import { UserDisplay } from "src/components/shared/UserDisplay";
 import { ROUTES } from "src/routes";
 import {
   ALL_REQUEST,
-  CONNECTIONS,
+  // CONNECTIONS,
   CREDENTIALS,
   CREDENTIALS_TABS,
   NOTIFICATION,
@@ -29,7 +29,7 @@ export function SiderMenu({
   const navigate = useNavigate();
   const [status, setStatus] = useState<boolean>(false);
 
-  const connectionsPath = ROUTES.connections.path;
+  // const connectionsPath = ROUTES.connections.path;
   const credentialsPath = ROUTES.credentials.path;
   const profilepath = ROUTES.profile.path;
   const issuerStatePath = ROUTES.issuerState.path;
@@ -51,10 +51,10 @@ export function SiderMenu({
       )
     ) {
       return [credentialsPath];
-    } else if (
-      matchRoutes([{ path: connectionsPath }, { path: ROUTES.connectionDetails.path }], pathname)
-    ) {
-      return [connectionsPath];
+      // } else if (
+      //   matchRoutes([{ path: connectionsPath }, { path: ROUTES.connectionDetails.path }], pathname)
+      // ) {
+      //   return [connectionsPath];
     } else if (matchRoutes([{ path: issuerStatePath }], pathname)) {
       return [issuerStatePath];
     } else if (matchRoutes([{ path: notificationPath }], pathname)) {
@@ -134,13 +134,13 @@ export function SiderMenu({
                     ),
                   title: "",
                 },
-                {
-                  icon: <IconConnections />,
-                  key: connectionsPath,
-                  label: CONNECTIONS,
-                  onClick: () => onMenuClick(connectionsPath),
-                  title: "",
-                },
+                // {
+                //   icon: <IconConnections />,
+                //   key: connectionsPath,
+                //   label: CONNECTIONS,
+                //   onClick: () => onMenuClick(connectionsPath),
+                //   title: "",
+                // },
               ]}
               selectedKeys={getSelectedKey()}
             />
@@ -173,13 +173,13 @@ export function SiderMenu({
                     ),
                   title: "",
                 },
-                {
-                  icon: <IconConnections />,
-                  key: connectionsPath,
-                  label: CONNECTIONS,
-                  onClick: () => onMenuClick(connectionsPath),
-                  title: "",
-                },
+                // {
+                //   icon: <IconConnections />,
+                //   key: connectionsPath,
+                //   label: CONNECTIONS,
+                //   onClick: () => onMenuClick(connectionsPath),
+                //   title: "",
+                // },
               ]}
               selectedKeys={getSelectedKey()}
             />

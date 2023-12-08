@@ -9,9 +9,11 @@ import { CLOSE, ISSUE_CREDENTIAL } from "src/utils/constants";
 
 export function IssueCredentialUser({
   onClose,
+  onIssue,
   request,
 }: {
   onClose: () => void;
+  onIssue: () => void;
   request: Request;
 }) {
   const env = useEnvContext();
@@ -43,6 +45,7 @@ export function IssueCredentialUser({
         };
         void issueCredentialRequest({ dataSchema, env }).then((response) => {
           if (response.success) {
+            onIssue();
             void messageAPI.success("Credential Request Sent").then(() => onClose());
           } else {
             setIsLoading(false);

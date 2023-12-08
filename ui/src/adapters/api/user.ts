@@ -8,6 +8,8 @@ import {
   DigiLockerCreateUrlResponse,
   DigiLockerLoginResponse,
   Login,
+  SignupResponse,
+  UserDIDResponse,
   UserDetails,
   UserResponse,
   userProfile,
@@ -24,17 +26,28 @@ export const userParser = getStrictParser<UserDetails, UserDetails>()(
     documentationSource: z.string(),
     gmail: z.string(),
     gstin: z.string(),
+    adharStatus: z.boolean(),
     id: z.string(),
+    gstinStatus: z.boolean(),
     iscompleted: z.boolean(),
     name: z.string(),
     owner: z.string(),
     PAN: z.string(),
+    PANStatus: z.boolean(),
     phoneNumber: z.string(),
     username: z.string(),
     userType: z.string(),
   })
 );
 
+export type CreateUser = {
+  Email: string;
+  Password: string;
+  Role: string;
+  UserDID: string;
+  UserName: string;
+  firstName: string;
+};
 export const digiLockerRsponse = getStrictParser<
   DigiLockerLoginResponse,
   DigiLockerLoginResponse
@@ -62,6 +75,12 @@ export const digiLockerUrlResponse = getStrictParser<
   })
 );
 
+export const signupResponse = getStrictParser<SignupResponse, SignupResponse>()(
+  z.object({
+    msg: z.string(),
+    status: z.boolean(),
+  })
+);
 export const userResponseParser = getStrictParser<UserResponse, UserResponse>()(
   z.object({
     msg: z.string(),
@@ -78,6 +97,20 @@ export const loginParser = getStrictParser<Login, Login>()(
     userDID: z.string(),
     username: z.string(),
     userType: z.string(),
+  })
+);
+
+export type GetUserDID = {
+  didMetadata: {
+    blockchain: string;
+    method: string;
+    network: string;
+  };
+};
+
+export const userDIDResponse = getStrictParser<UserDIDResponse, UserDIDResponse>()(
+  z.object({
+    identifier: z.string(),
   })
 );
 
@@ -100,6 +133,7 @@ export async function getUserDetails({
       method: "POST",
       url: `${API_VERSION}/getUser`,
     });
+    console.log(response.data);
     return buildSuccessResponse(userParser.parse(response.data));
   } catch (error) {
     return buildErrorResponse(error);
@@ -214,10 +248,11 @@ export async function getDigiLockerUrl({
   userId: string;
 }): Promise<Response<DigiLockerCreateUrlResponse>> {
   try {
+    // console.log(id);
     const response = await axios({
       data: { task: "url" },
       headers: {
-        Accept: "application/json",
+        // Accept: "application/json",
         Authorization: id,
       },
       method: "POST",
@@ -252,6 +287,62 @@ export async function getDigiLockerDetails({
     console.log(response.data);
 
     return buildSuccessResponse(digiLockerUrlResponse.parse(response.data));
+  } catch (error) {
+    return buildErrorResponse(error);
+  }
+}
+
+export async function getUserDID({
+  payload,
+}: {
+  payload: GetUserDID;
+}): Promise<Response<UserDIDResponse>> {
+  try {
+    const username = "user-issuer";
+    const password = "password-issuer";
+    const credentials = `${username}:${password}`;
+    // Encode the credentials in Base64
+    const base64Credentials = btoa(credentials);
+    const response = await axios({
+      // baseURL: env.api.url,
+      data: payload,
+      headers: {
+        Authorization: `Basic ${base64Credentials}`,
+        "Content-Type": "application/json",
+      },
+      method: "POST",
+      url: `http://localhost:3001/v1/identities`,
+    });
+
+    console.log(response.data);
+
+    return buildSuccessResponse(userDIDResponse.parse(response.data));
+  } catch (error) {
+    return buildErrorResponse(error);
+  }
+}
+
+export async function signUp({
+  env,
+  payload,
+}: {
+  env: Env;
+  payload: CreateUser;
+}): Promise<Response<SignupResponse>> {
+  try {
+    const response = await axios({
+      baseURL: env.api.url,
+      data: payload,
+      headers: {
+        Authorization: buildAuthorizationHeader(env),
+      },
+      method: "POST",
+      url: `${API_VERSION}/signup`,
+    });
+
+    console.log(response.data);
+
+    return buildSuccessResponse(signupResponse.parse(response.data));
   } catch (error) {
     return buildErrorResponse(error);
   }

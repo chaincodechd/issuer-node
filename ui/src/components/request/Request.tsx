@@ -18,7 +18,7 @@ export function Request() {
 
   return (
     <SiderLayoutContent
-      description="Description for Request tab"
+      // description="Description for Request tab"
       extra={
         User !== "issuer" &&
         User !== "verifier" && (

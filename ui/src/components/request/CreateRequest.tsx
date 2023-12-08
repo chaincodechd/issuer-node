@@ -84,7 +84,7 @@ export function CreateRequest() {
     });
   }, [env, userDID]);
 
-  const handleFormSubmit = async (values: FormData) => {
+  const handleFormSubmit = (values: FormData) => {
     const schema = schemaList.find((item) => item.type === values.schemaID);
     console.log(values);
 
@@ -98,7 +98,9 @@ export function CreateRequest() {
       Source: "Manual",
       userDID: userDID,
     };
-    await requestVC({
+    console.log(payload);
+
+    void requestVC({
       env,
       payload,
     }).then(void navigate(generatePath(ROUTES.request.path)));
@@ -115,7 +117,7 @@ export function CreateRequest() {
         title={CREATE_REQUEST}
       >
         <Card className="issue-credential-card" title="Create Request">
-          <Form layout="vertical" onFinish={() => handleFormSubmit}>
+          <Form layout="vertical" onFinish={handleFormSubmit}>
             <Form.Item
               label="Select Crendential Type"
               name="schemaID"

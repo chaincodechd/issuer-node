@@ -7,7 +7,7 @@ import { NOTIFICATION } from "src/utils/constants";
 
 export function Notification() {
   return (
-    <SiderLayoutContent description="Description for Notification tab" title={NOTIFICATION}>
+    <SiderLayoutContent title={NOTIFICATION}>
       <Space direction="vertical">
         <NotificationsTable />
       </Space>

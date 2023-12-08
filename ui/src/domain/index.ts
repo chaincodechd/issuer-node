@@ -4,6 +4,8 @@ export type { Connection } from "src/domain/connection";
 
 export type { LoginLabel } from "src/domain/login";
 
+export type { Signup } from "src/domain/login";
+
 export type {
   Credential,
   CredentialsTabIDs,
