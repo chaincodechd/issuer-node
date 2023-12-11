@@ -409,7 +409,7 @@ func (siw *ServerInterfaceWrapper) GetIdentities(w http.ResponseWriter, r *http.
 func (siw *ServerInterfaceWrapper) CreateIdentity(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	ctx = context.WithValue(ctx, BasicAuthScopes, []string{""})
+	// ctx = context.WithValue(ctx, BasicAuthScopes, []string{""})
 
 	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.CreateIdentity(w, r)
