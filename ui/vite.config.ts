@@ -41,7 +41,7 @@ const manifestForPlugIn = {
     orientation: "portrait",
     scope: "/",
     short_name: "PolygonID",
-    start_url: "/",
+    start_url: "/src/index.tsx",
     theme_color: "#171717",
   },
   registerType: "prompt",
