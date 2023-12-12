@@ -10,6 +10,7 @@
     "copy-to-clipboard": "^3.3.3",
     "dayjs": "^1.11.9",
     "js-sha3": "^0.8.0",
+    "pwa-asset-generator": "^6.3.1",
     "qrcode.react": "^3.1.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -17,6 +18,7 @@
     "react-router-dom": "^6.14.1",
     "react-syntax-highlighter": "^15.5.0",
     "validator": "^13.9.0",
+    "webpack-manifest-plugin": "^5.0.0",
     "zod": "^3.21.4"
   },
   "devDependencies": {
@@ -37,6 +39,7 @@
     "typescript": "^5.0.4",
     "vite": "^4.3.9",
     "vite-plugin-checker": "^0.6.1",
+    "vite-plugin-pwa": "^0.17.4",
     "vite-plugin-svgr": "^3.2.0",
     "vite-tsconfig-paths": "^4.2.0"
   },

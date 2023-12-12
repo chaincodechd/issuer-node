@@ -6,6 +6,7 @@ import { buildAuthorizationHeader } from ".";
 import { Env } from "src/domain";
 import {
   DigiLockerCreateUrlResponse,
+  DigiLockerDetailsResponse,
   DigiLockerLoginResponse,
   Login,
   SignupResponse,
@@ -21,14 +22,14 @@ export const userParser = getStrictParser<UserDetails, UserDetails>()(
   z.object({
     address: z.string(),
     adhar: z.string(),
+    adharStatus: z.boolean(),
     createdAt: datetimeParser,
     dob: z.string(),
     documentationSource: z.string(),
     gmail: z.string(),
     gstin: z.string(),
-    adharStatus: z.boolean(),
-    id: z.string(),
     gstinStatus: z.boolean(),
+    id: z.string(),
     iscompleted: z.boolean(),
     name: z.string(),
     owner: z.string(),
@@ -70,6 +71,45 @@ export const digiLockerUrlResponse = getStrictParser<
     result: z.object({
       requestId: z.string(),
       url: z.string(),
+    }),
+    task: z.string(),
+  })
+);
+
+export const digiLockerDetailsResponse = getStrictParser<
+  DigiLockerDetailsResponse,
+  DigiLockerDetailsResponse
+>()(
+  z.object({
+    essentials: z.object({
+      requestId: z.string(),
+    }),
+    id: z.string(),
+    patronId: z.string(),
+    result: z.object({
+      files: z.array(
+        z.object({
+          date: z.string(),
+          description: z.string(),
+          doctype: z.string(),
+          mime: z.array(z.string()),
+          id: z.string(),
+          name: z.string(),
+          issuer: z.string(),
+          size: z.string(),
+          issuerid: z.string(),
+          type: z.string(),
+          parent: z.string(),
+        })
+      ),
+      userDetails: z.object({
+        digilockerid: z.string(),
+        dob: z.string(),
+        eaadhaar: z.string(),
+        gender: z.string(),
+        mobile: z.string(),
+        name: z.string(),
+      }),
     }),
     task: z.string(),
   })
@@ -274,7 +314,7 @@ export async function getDigiLockerDetails({
   id: string;
   requestId: string;
   userId: string;
-}): Promise<Response<DigiLockerCreateUrlResponse>> {
+}): Promise<Response<DigiLockerDetailsResponse>> {
   try {
     const response = await axios({
       data: { essentials: { requestId: requestId }, task: "getDetails" },
@@ -298,18 +338,8 @@ export async function getUserDID({
   payload: GetUserDID;
 }): Promise<Response<UserDIDResponse>> {
   try {
-    const username = "user-issuer";
-    const password = "password-issuer";
-    const credentials = `${username}:${password}`;
-    // Encode the credentials in Base64
-    const base64Credentials = btoa(credentials);
     const response = await axios({
-      // baseURL: env.api.url,
       data: payload,
-      headers: {
-        Authorization: `Basic ${base64Credentials}`,
-        "Content-Type": "application/json",
-      },
       method: "POST",
       url: `http://localhost:3001/v1/identities`,
     });

@@ -1,7 +1,7 @@
 import { LockOutlined, UserOutlined } from "@ant-design/icons";
 import { Button, Checkbox, Form, Input, Space, message } from "antd";
 import { Link, generatePath, useNavigate } from "react-router-dom";
-import { getUserDID, login } from "src/adapters/api/user";
+import { login } from "src/adapters/api/user";
 import { useEnvContext } from "src/contexts/Env";
 import { useUserContext } from "src/contexts/UserDetails";
 import { LoginLabel } from "src/domain";
@@ -51,27 +51,6 @@ export const Login = () => {
     }
   };
 
-  const handleRegister = () => {
-    const payload = {
-      didMetadata: {
-        blockchain: "polygon",
-        method: "polygonid",
-        network: "mumbai",
-      },
-    };
-    void getUserDID({
-      payload,
-    })
-      .then((response) => {
-        if (response.success) {
-          void navigate(generatePath(ROUTES.register.path)), { state: { data: response.data } };
-        } else {
-          console.log("yes");
-          void messageAPI.error(response.error.message);
-        }
-      })
-      .catch((error) => console.log(error));
-  };
   return (
     <>
       {messageContext}
@@ -125,10 +104,7 @@ export const Login = () => {
             <Button className="login-form-button" htmlType="submit" type="primary">
               Log in
             </Button>
-            Or{" "}
-            <Link onClick={handleRegister} to={ROUTES.register.path}>
-              register now!
-            </Link>
+            Or <Link to={ROUTES.register.path}>register now</Link>
           </Space>
         </Form.Item>
       </Form>

@@ -2,7 +2,7 @@ import { LockOutlined, MailOutlined, UserOutlined } from "@ant-design/icons";
 import { Button, Checkbox, Form, Input, Select, Space, message } from "antd";
 // import { useEffect } from "react";
 import { generatePath, useNavigate } from "react-router-dom";
-import { signUp } from "src/adapters/api/user"; // Import your signup API function
+import { getUserDID, signUp } from "src/adapters/api/user"; // Import your signup API function
 import { useEnvContext } from "src/contexts/Env";
 import { useUserContext } from "src/contexts/UserDetails";
 import { Signup } from "src/domain/login";
@@ -16,31 +16,50 @@ export const SignUp = () => {
 
   const onFinish = (values: Signup) => {
     const payload = {
-      Email: values.email,
-      firstName: values.firstName,
-      Password: values.password,
-      Role: values.role,
-      UserDID: values.userDID,
-      UserName: values.username,
+      didMetadata: {
+        blockchain: "polygon",
+        method: "polygonid",
+        network: "mumbai",
+      },
     };
-    void signUp({
-      env,
+    void getUserDID({
       payload,
-    }).then((response) => {
-      if (response.success) {
-        void navigate(generatePath(ROUTES.login.path));
-        setUserDetails(
-          values.username,
-          values.email,
-          values.password,
-          values.firstName,
-          values.role,
-          values.userDID
-        );
-      } else {
-        void messageAPI.error(response.error.message);
-      }
-    });
+    })
+      .then((response) => {
+        if (response.success) {
+          const payload = {
+            Email: values.email,
+            firstName: values.firstName,
+            Password: values.password,
+            Role: values.role,
+            UserDID: response.data.identifier,
+            UserName: values.username,
+          };
+          void signUp({
+            env,
+            payload,
+          }).then((signUpResponse) => {
+            if (signUpResponse.success) {
+              console.log(signUpResponse.data);
+              void navigate(generatePath(ROUTES.login.path));
+              setUserDetails(
+                values.username,
+                values.email,
+                values.password,
+                values.firstName,
+                values.role,
+                response.data.identifier
+              );
+            }
+          });
+          // void navigate(generatePath(ROUTES.register.path), { state: { data: response.data.identifier } });
+        } else {
+          void messageAPI.error(response.error.message);
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      });
     // localStorage.setItem("user", values.username);
     // Set other user-related data to localStorage as needed
   };
@@ -56,17 +75,6 @@ export const SignUp = () => {
         name="normal_signup"
         onFinish={onFinish}
       >
-        <Form.Item
-          name="userDID"
-          rules={[
-            {
-              message: "Please input your userDID!",
-              required: true,
-            },
-          ]}
-        >
-          <Input placeholder="UserDID" prefix={<UserOutlined className="site-form-item-icon" />} />
-        </Form.Item>
         <Form.Item
           name="username"
           rules={[

@@ -87,13 +87,35 @@ export type DigiLockerCreateUrlResponse = {
 };
 
 export type DigiLockerDetailsResponse = {
-  digilockerid: string;
-  dob: string;
-  eaadhaar: string;
-  files: Array<string>;
-  gender: string;
-  name: string;
-  nameAsAdhar: string;
+  essentials: {
+    requestId: string;
+  };
+  id: string;
+  patronId: string;
+  task: string;
+  result: {
+    userDetails: {
+      digilockerid: string;
+      name: string;
+      dob: string;
+      gender: string;
+      eaadhaar: string;
+      mobile: string;
+    };
+    files: {
+      name: string;
+      type: string;
+      size: string;
+      date: string;
+      parent: string;
+      mime: string[];
+      doctype: string;
+      description: string;
+      issuerid: string;
+      issuer: string;
+      id: string;
+    }[];
+  };
 };
 
 export type SignupResponse = {

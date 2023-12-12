@@ -55,15 +55,12 @@ export function Profile() {
 
   const [formValues, setFormValues] = useState<UserDetails>({
     address: userProfileData?.address || "",
-
     adhar: userProfileData?.adhar || "",
-    // ddress: userProfileData?.address || "",
     dob: userProfileData?.dob || "",
     gstin: userProfileData?.gstin || "",
     owner: userProfileData?.owner || "",
     PAN: userProfileData?.PAN || "",
     phoneNumber: userProfileData?.phoneNumber || "",
-    //DocumentationSource: userProfileData?.documentationSource || "",
     userType: userProfileData?.userType || "",
   });
 
