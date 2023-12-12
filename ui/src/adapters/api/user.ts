@@ -92,14 +92,14 @@ export const digiLockerDetailsResponse = getStrictParser<
           date: z.string(),
           description: z.string(),
           doctype: z.string(),
-          mime: z.array(z.string()),
           id: z.string(),
-          name: z.string(),
           issuer: z.string(),
-          size: z.string(),
           issuerid: z.string(),
-          type: z.string(),
+          mime: z.array(z.string()),
+          name: z.string(),
           parent: z.string(),
+          size: z.string(),
+          type: z.string(),
         })
       ),
       userDetails: z.object({
