@@ -16,4 +16,7 @@ type VerifierService interface {
 	VerifyPAN(ctx context.Context,PAN string,Name string) (*domain.VerifyPANResponse, error)
 	VerifyAdhar(ctx context.Context,AdahrNumber string) (*domain.VerifyAadhaarResponse, error)
 	VerifyGSTIN(ctx context.Context, gstin string) (*domain.VerifyGSTINResponseNew, error)
+	VerifierRegister(ctx context.Context,id string, username string, password string, orgName string, orgGmail string) (string, error)
+	VerifierLogin(ctx context.Context, username string, password string) (*domain.VerifierDetails, error)
+	VerifierDetails(ctx context.Context, verifierId string) (*domain.VerifierDetails, error)
 }

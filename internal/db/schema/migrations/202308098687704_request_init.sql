@@ -83,12 +83,28 @@ CREATE TABLE users
 );
 
 
+CREATE TABLE verifiers
+(
+    id             text              NOT NULL,
+    orgname        text              NULL,
+    username        text             NULL,
+    userpassword     text             NULL,
+    user_gmail       text             NULL,
+    created_at timestamptz NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT verifier_pkey PRIMARY KEY (id)
+);
+
+
+
 -- +goose StatementEnd
 
 -- +goose Down
 -- +goose StatementBegin
 DROP TABLE IF EXISTS requests_for_vc;
 DROP TABLE IF EXISTS requests_for_auth;
+DROP TABLE IF EXISTS notifications;
+DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS verifiers;
 DROP TABLE IF EXISTS credentialexpirations;
 -- +goose StatementEnd
 

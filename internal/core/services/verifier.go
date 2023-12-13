@@ -65,6 +65,8 @@ func (v *verifier) AccessDigiLocker(ctx context.Context, patronid string, reques
 
 
 
+
+
 func (v *verifier) VerifyPAN(ctx context.Context,PAN string,Name string) (*domain.VerifyPANResponse, error) {
 	res, err := v.verRepo.Login(ctx, "ChaincodeConsulting_test", "tu6rithof3qe")
 	if err != nil {
@@ -118,4 +120,28 @@ func(v *verifier) VerifyGSTIN(ctx context.Context, gstin string) (*domain.Verify
 		return nil, err
 	}
 	return resp,err
+}
+
+func (v *verifier) VerifierLogin(ctx context.Context, username string, password string) (*domain.VerifierDetails, error) {
+	res, err := v.verRepo.VerifierLogin(ctx,v.storage.Pgx, username, password)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+func (v *verifier) VerifierRegister(ctx context.Context,id string, username string, password string, orgName string, orgGmail string) (string, error) {
+	res, err := v.verRepo.VerifierRegister(ctx,v.storage.Pgx, username, password,id, orgName, orgGmail)
+	if err != nil {
+		return res, err
+	}
+	return res, nil
+}
+
+func (v *verifier) VerifierDetails(ctx context.Context, verifierId string) (*domain.VerifierDetails, error) {
+	verifierDetails, err := v.verRepo.VerifierDetails(ctx,v.storage.Pgx, verifierId)
+	if err != nil {
+		return nil, err
+	}
+	return verifierDetails, nil
 }

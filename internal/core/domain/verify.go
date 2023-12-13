@@ -159,6 +159,14 @@ type VerifyGSTINResponseNew struct {
 	Result   VerifyData `json:"result"`
 }
 
+type VerifierDetails struct {
+	VerifierID string `json:"verifierId"`
+	UserName  string `json:"userName"`
+	OrgName string `json:"orgName"`
+	OrgGmail string `json:"orgGmail"`
+}
+
+
 //	{
 //	    "service": "Identity",
 //	    "itemId": "655d9a126dab5b00238d9db4",

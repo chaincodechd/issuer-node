@@ -19,11 +19,17 @@ import (
 	"github.com/iden3/go-iden3-auth/v2/loaders"
 	"github.com/iden3/go-iden3-auth/v2/pubsignals"
 	"github.com/iden3/go-iden3-auth/v2/state"
+	// "github.com/iden3/go-iden3-crypto/constants"
+	// "github.com/iden3/go-iden3-crypto/poseidon"
+	// "github.com/iden3/go-iden3-crypto/utils"
+	// "github.com/iden3/go-rapidsnark/types"
 	"github.com/iden3/iden3comm/v2/protocol"
+	// zk "github.com/iden3/go-jwz"
 
 	// shell "github.com/ipfs/go-ipfs-api"
 	"github.com/polygonid/sh-id-platform/internal/core/domain"
 	"github.com/polygonid/sh-id-platform/internal/core/ports"
+	"github.com/polygonid/sh-id-platform/internal/db"
 )
 
 type verifier struct{}
@@ -58,6 +64,13 @@ type VerifyAdharResponse struct {
 	} `json:"response"`
 }
 
+type VerifierDetails struct {
+	VerifierID string `json:"verifierId"`
+	UserName  string `json:"userName"`
+	OrgName string `json:"orgName"`
+	OrgGmail string `json:"orgGmail"`
+}
+
 type verifyresponse struct {
 	Response struct {
 		Name      string `json:"name"`
@@ -79,8 +92,52 @@ type verifyresponse struct {
 	} `json:"response"`
 }
 
+// type HeaderKey string
+// // Token represents a JWZ Token.
+// type Token struct {
+// 	ZkProof *types.ZKProof // The third segment of the token.  Populated when you Parse a token
+
+// 	Alg       string // fields that are part of headers
+// 	CircuitID string // id of circuit that will be used for proving
+
+// 	Method ProvingMethod // proving method to create a zkp
+
+// 	raw rawJSONWebZeroknowledge // The raw token.  Populated when you Parse a token
+
+// 	inputsPreparer ProofInputsPreparerHandlerFunc
+// }
+
+// // rawJSONWebZeroknowledge is json web token with signature presented by zero knowledge proof
+// type rawJSONWebZeroknowledge struct {
+// 	Payload   []byte                    `json:"payload,omitempty"`
+// 	Protected []byte                    `json:"protected,omitempty"`
+// 	Header    map[HeaderKey]interface{} `json:"header,omitempty"`
+// 	ZKP       []byte                    `json:"zkp,omitempty"`
+// }
+
+
+// // ProvingMethod can be used add new methods for signing or verifying tokens.
+// type ProvingMethod interface {
+// 	Verify(messageHash []byte, proof *types.ZKProof, verificationKey []byte) error // Returns nil if proof is valid
+// 	Prove(inputs []byte, provingKey []byte, wasm []byte) (*types.ZKProof, error)   // Returns proof or error
+// 	Alg() string                                                                   // Returns the alg identifier for this method (example: 'AUTH-GROTH-16')
+// 	CircuitID() string
+// }
+
+
+
 var requestMap = make(map[string]interface{})
 var sessionID = 0
+
+
+
+// ProofInputsPreparerHandlerFunc prepares inputs using hash message and circuit id
+type ProofInputsPreparerHandlerFunc func(hash []byte, circuitID circuits.CircuitID) ([]byte, error)
+
+// Prepare function is responsible to call provided handler for inputs preparation
+func (f ProofInputsPreparerHandlerFunc) Prepare(hash []byte, circuitID circuits.CircuitID) ([]byte, error) {
+	return f(hash, circuitID)
+}
 
 func (v *verifier) GetAuthRequest(ctx context.Context, schemaType string, schemaURL string, credSubject map[string]interface{}) (protocol.AuthorizationRequestMessage, error) {
 	// Audience is verifier id
@@ -175,6 +232,210 @@ func (v *verifier) Callback(ctx context.Context, sessionId string, tokenBytes []
 
 	return messageBytes, nil
 }
+
+
+
+
+// func (v *verifier) GenerateZKProof(){
+// 	// all headers must be protected
+// 	headers, err := json.Marshal(token.raw.Header)
+// 	if err != nil {
+// 		return "", err
+// 	}
+// 	token.raw.Protected = headers
+
+// 	msgHash, err := token.GetMessageHash()
+// 	if err != nil {
+// 		return "", err
+// 	}
+
+// 	inputs, err := token.inputsPreparer.Prepare(msgHash, circuits.CircuitID(token.CircuitID))
+// 	if err != nil {
+// 		return "", err
+// 	}
+
+// 	proof, err := token.Method.Prove(inputs, provingKey, wasm)
+// 	if err != nil {
+// 		return "", err
+// 	}
+// 	marshaledProof, err := json.Marshal(proof)
+// 	if err != nil {
+// 		return "", err
+// 	}
+// 	token.ZkProof = proof
+// 	token.raw.ZKP = marshaledProof
+
+// 	return token.CompactSerialize()
+// }
+
+// // Prove creates and returns a complete, proved JWZ.
+// // The token is proven using the Proving Method specified in the token.
+// func (v *verifier) Prove(provingKey, wasm []byte,token Token) (string, error) {
+
+
+// 	// all headers must be protected
+// 	headers, err := json.Marshal(token.raw.Header)
+// 	if err != nil {
+// 		return "", err
+// 	}
+// 	token.raw.Protected = headers
+
+// 	msgHash, err := token.GetMessageHash()
+// 	if err != nil {
+// 		return "", err
+// 	}
+
+// 	inputs, err := token.inputsPreparer.Prepare(msgHash, circuits.CircuitID(token.CircuitID))
+// 	if err != nil {
+// 		return "", err
+// 	}
+
+// 	proof, err := token.Method.Prove(inputs, provingKey, wasm)
+// 	if err != nil {
+// 		return "", err
+// 	}
+// 	marshaledProof, err := json.Marshal(proof)
+// 	if err != nil {
+// 		return "", err
+// 	}
+// 	token.ZkProof = proof
+// 	token.raw.ZKP = marshaledProof
+
+// 	return token.CompactSerialize()
+// }
+
+
+// // GetMessageHash returns bytes of jwz message hash.
+// func (token *Token) GetMessageHash() ([]byte, error) {
+
+// 	headers, err := json.Marshal(token.raw.Header)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	protectedHeaders := base64.RawURLEncoding.EncodeToString(headers)
+// 	payload := base64.RawURLEncoding.EncodeToString(token.raw.Payload)
+
+// 	// JWZ ZkProof input value is ASCII(BASE64URL(UTF8(JWS Protected Header)) || '.' || BASE64URL(JWS Payload)).
+// 	messageToProof := []byte(fmt.Sprintf("%s.%s", protectedHeaders, payload))
+// 	hash, err := Hash(messageToProof)
+
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return hash.Bytes(), nil
+// }
+
+// func (token *Token) CompactSerialize() (string, error) {
+
+// 	if token.raw.Header == nil || token.raw.Protected == nil || token.ZkProof == nil {
+// 		return "", errors.New("iden3/jwz:can't serialize without one of components")
+// 	}
+// 	serializedProtected := base64.RawURLEncoding.EncodeToString(token.raw.Protected)
+// 	proofBytes, err := json.Marshal(token.ZkProof)
+// 	if err != nil {
+// 		return "", err
+// 	}
+// 	serializedProof := base64.RawURLEncoding.EncodeToString(proofBytes)
+// 	serializedPayload := base64.RawURLEncoding.EncodeToString(token.raw.Payload)
+
+// 	return fmt.Sprintf("%s.%s.%s", serializedProtected, serializedPayload, serializedProof), nil
+// }
+
+// // Hash returns poseidon hash of big.Int
+// // that was created from sha256 hash of the message bytes
+// // if such big.Int is not in the Field, DivMod result is returned.
+// func Hash(message []byte) (*big.Int, error) {
+
+// 	// 1. sha256 hash
+// 	h := sha256.New()
+// 	_, err := h.Write(message)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	b := h.Sum(nil)
+
+// 	// 2. swap hash before hashing
+
+// 	bs := utils.SwapEndianness(b)
+// 	bi := new(big.Int).SetBytes(bs)
+
+// 	// 3. check if it's in field
+// 	var m *big.Int
+// 	if utils.CheckBigIntInField(bi) {
+// 		m = bi
+// 	} else {
+// 		m = bi.Mod(bi, constants.Q)
+// 	}
+
+// 	// 2. poseidon
+// 	res, err := poseidon.Hash([]*big.Int{m})
+
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return res, err
+// }
+
+
+
+
+
+
+
+
+
+func (v *verifier) VerifierRegister(ctx context.Context, conn db.Querier, orgusername string, orgPassword string, orgID string, orgName string, orgEmail string) (string, error) {
+
+	_, err := conn.Exec(ctx, "INSERT INTO verifiers (username, userpassword, id, orgname, user_gmail) VALUES ($1, $2, $3, $4, $5) RETURNING id", orgusername, orgPassword, orgID, orgName, orgEmail)
+	if err != nil {
+		log.Println(err.Error())
+		return "Registration Failed", err
+	}
+	return "Registration Successful", nil
+}
+
+func (v *verifier) VerifierLogin(ctx context.Context, conn db.Querier, orgusername string, orgPassword string) (*domain.VerifierDetails, error) {
+
+	res:= VerifierDetails{}
+	
+	err := conn.QueryRow(ctx, "SELECT id,orgname,username,user_gmail FROM verifiers WHERE username=$1 AND userpassword=$2", orgusername, orgPassword).Scan(res.VerifierID, res.OrgName, res.UserName, res.OrgGmail)
+	if err != nil {
+		log.Println(err.Error())
+		return nil, err
+	}
+	log.Println("res", res)
+	return &domain.VerifierDetails{
+		VerifierID: res.VerifierID,
+		UserName: res.UserName,
+		OrgName: res.OrgName,
+		OrgGmail: res.OrgGmail,
+	}, nil
+	// fmt.Println("orgUser", orgUser)
+}
+
+func (v *verifier) VerifierDetails(ctx context.Context, conn db.Querier, id string) (*domain.VerifierDetails, error) {
+
+	res:= VerifierDetails{}
+	err := conn.QueryRow(ctx, "SELECT id,orgname,username,user_gmail FROM verifiers WHERE id=$1", id).Scan(res.VerifierID, res.OrgName, res.UserName, res.OrgGmail)
+	if err != nil {
+		log.Println(err.Error())
+		return nil, err
+	}
+	log.Println("res", res)
+	return &domain.VerifierDetails{
+		VerifierID: res.VerifierID,
+		UserName: res.UserName,
+		OrgName: res.OrgName,
+		OrgGmail: res.OrgGmail,
+	}, nil
+	// fmt.Println("orgUser", orgUser)
+}
+
+// id             text              NOT NULL,
+// orgname        text              NULL,
+// username        text             NULL,
+// userpassword     text             NULL,
+// user_gmail       text             NULL,
 
 func (v *verifier) Login(ctx context.Context, username string, password string) (*domain.SinzyLoginResponse, error) {
 	url := "https://preproduction.signzy.tech/api/v2/patrons/login"
@@ -529,7 +790,7 @@ func (v *verifier) VerifyAdhar(ctx context.Context, itemId string, accessToken s
 		log.Println(err.Error())
 		return nil, err
 	}
-	if response.Response.Result.Verified != "true"{
+	if response.Response.Result.Verified != "true" {
 		return nil, fmt.Errorf("Adhar not verified")
 	} else {
 		fmt.Println("Status", "===========Verified==========")
@@ -575,8 +836,6 @@ func (v *verifier) VerifyPAN(ctx context.Context, itemId string, accessToken str
 		}, nil
 	}
 }
-
-
 
 func (v *verifier) VerifyGSTIN(ctx context.Context, partonId string, Authorization string, gstin string) (*domain.VerifyGSTINResponseNew, error) {
 

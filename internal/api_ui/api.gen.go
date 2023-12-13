@@ -675,6 +675,12 @@ type ServerInterface interface {
 	// POST ("v1/verifyRequest")
 	VerifyRequest(w http.ResponseWriter, r *http.Request,id Id)
 
+	VerifierRegister(w http.ResponseWriter, r *http.Request)
+
+	VerifierLogin(w http.ResponseWriter, r *http.Request)
+
+	VerifierDetails(w http.ResponseWriter, r *http.Request,id string)
+
 }
 
 // Signing up the user
@@ -709,6 +715,59 @@ func (siw *ServerInterfaceWrapper) SignIn(w http.ResponseWriter, r *http.Request
 	}
 
 	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+func (siw *ServerInterfaceWrapper) VerifierRegister(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.VerifierRegister(w, r)
+	})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+
+}
+
+func (siw *ServerInterfaceWrapper) VerifierLogin(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.VerifierLogin(w, r)
+	})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+
+}
+
+func (siw *ServerInterfaceWrapper) VerifierDetails(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var id string
+
+	err := runtime.BindStyledParameterWithLocation("simple", false, "id", runtime.ParamLocationPath, chi.URLParam(r, "id"), &id)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.VerifierDetails(w, r,id)
+	})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+
 }
 
 func (siw *ServerInterfaceWrapper) AccessDigiLocker(w http.ResponseWriter, r *http.Request) {
@@ -2241,6 +2300,18 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/v1/VerifyRequest/{id}", wrapper.VerifyRequest)
+	})
+
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/v1/VerifierRegister", wrapper.VerifierRegister)
+	})
+
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/v1/VerifierLogin", wrapper.VerifierLogin)
+	})
+
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/v1/VerifierDetails/{id}", wrapper.VerifierDetails)
 	})
 	return r
 }
@@ -3887,8 +3958,150 @@ func (response VerifyRequest500Response) VisitVerifyRequestResponse(w http.Respo
 	return json.NewEncoder(w).Encode(response)
 }
 
+type VerifierRegisterRequestObject struct{
+	Body *VerifierRegisterRequestBody
+}
 
+type VerifierRegisterResponseObject interface{
+	VisitVerifierRegisterResponse(w http.ResponseWriter) error
+}
 
+type VerifierRegister200Response struct{
+	Msg string `json:"msg"`
+	VerifierId string `json:"verifierId"`
+	Status bool `json:"status"`
+}
+
+func (response VerifierRegister200Response) VisitVerifierRegisterResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	return json.NewEncoder(w).Encode(response)
+}
+
+type VerifierRegister500Response struct{
+	Msg string `json:"msg"`
+	Status bool `json:"status"`
+}
+
+func (response VerifierRegister500Response) VisitVerifierRegisterResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+	return json.NewEncoder(w).Encode(response)
+}
+
+type VerifierRegisterRequestBody struct{
+	OrganizationName string `json:"organizationName"`
+	OrgUsername string `json:"orgUsername"`
+	OrgPassword string `json:"orgPassword"`
+	OrgEmail string `json:"orgEmail"`
+}
+
+type VerifierLoginRequestObject struct{
+	Body *VerifierLoginRequestBody
+}
+
+type VerifierLoginResponseObject interface{
+	VisitVerifierLoginResponse(w http.ResponseWriter) error
+}
+
+type VerifierLogin200Response struct{
+	Msg string `json:"msg"`
+	Status bool `json:"status"`
+	Id string `json:"id"`
+	OrgName string `json:"orgName"`
+	OrgUsername string `json:"orgUsername"`
+	OrgEmail string `json:"orgEmail"`
+}
+
+func (response VerifierLogin200Response) VisitVerifierLoginResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	return json.NewEncoder(w).Encode(response)
+}
+
+type VerifierLogin500Response struct{
+	Msg string `json:"msg"`
+	Status bool `json:"status"`
+}
+
+func (response VerifierLogin500Response) VisitVerifierLoginResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+	return json.NewEncoder(w).Encode(response)
+}
+
+type VerifierLoginRequestBody struct{
+	OrgUsername string `json:"orgUsername"`
+	OrgPassword string `json:"orgPassword"`
+}
+
+type VerifierGetUserRequestObject struct{
+	Body *VerifierGetUserRequestBody
+}
+
+type VerifierGetUserResponseObject interface{
+	VisitVerifierGetUserResponse(w http.ResponseWriter) error
+}
+
+type VerifierGetUser200Response struct{
+	Msg string `json:"msg"`
+	Status bool `json:"status"`
+}
+
+func (response VerifierGetUser200Response) VisitVerifierGetUserResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	return json.NewEncoder(w).Encode(response)
+}
+
+type VerifierGetUser500Response struct{
+	Msg string `json:"msg"`
+	Status bool `json:"status"`
+}
+
+func (response VerifierGetUser500Response) VisitVerifierGetUserResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+	return json.NewEncoder(w).Encode(response)
+}
+
+type VerifierGetUserRequestBody struct{
+	OrgId string `json:"orgUsername"`
+}
+
+type VerifierGetUserResponseBody struct{
+	OrgUsername string `json:"orgUsername"`
+	OrgEmail string `json:"orgEmail"`
+	OrgName string `json:"orgName"`
+	OrgId string `json:"orgId"`
+}
+
+type VerifierGetUser200ResponseBody struct{
+	Msg string `json:"msg"`
+	Status bool `json:"status"`
+	VerifierGetUserResponseBody
+}
+
+type VerifierGetUser500ResponseBody struct{
+	Msg string `json:"msg"`
+	Status bool `json:"status"`
+}
+
+type VerifierGetUser200ResponseObject interface{
+	VisitVerifierGetUser200Response(w http.ResponseWriter) error
+}
+
+func (response VerifierGetUser200ResponseBody) VisitVerifierGetUser200Response(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	return json.NewEncoder(w).Encode(response)
+}
+
+func (response VerifierGetUser500ResponseBody) VisitVerifierGetUserResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+	return json.NewEncoder(w).Encode(response)
+}
 
 
 type SignUpRequestObject struct{
@@ -4045,6 +4258,13 @@ type StrictServerInterface interface {
 	GetDigiLockerURL(ctx context.Context)(GetDigiLockerResponseObject,error)
 
 	VerifyRequest(ctx context.Context, id uuid.UUID)(VerifyRequestResponseObject,error)
+
+	VerifierRegister(ctx context.Context, request VerifierRegisterRequestObject)(VerifierRegisterResponseObject,error)
+
+	VerifierLogin(ctx context.Context, request VerifierLoginRequestObject)(VerifierLoginResponseObject,error)
+
+	VerifierDetails(ctx context.Context, id string)(VerifierLoginResponseObject,error)
+
 }
 
 type StrictHandlerFunc = runtime.StrictHttpHandlerFunc
@@ -4136,6 +4356,116 @@ func (sh *strictHandler) SignIn(w http.ResponseWriter, r *http.Request){
 		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("Unexpected response type: %T", response))
 	}
 }
+
+func (sh *strictHandler) VerifierRegister(w http.ResponseWriter, r *http.Request){
+	var request VerifierRegisterRequestObject
+
+	var body VerifierRegisterRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.VerifierRegister(ctx, request.(VerifierRegisterRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "VerifierRegister")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(VerifierRegister200Response); ok {
+		if err := validResponse.VisitVerifierRegisterResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if validResponse, ok := response.(VerifierRegister500Response); ok {
+		if err := validResponse.VisitVerifierRegisterResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	}  else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("Unexpected response type: %T", response))
+	}
+}
+
+
+func (sh *strictHandler) VerifierLogin(w http.ResponseWriter, r *http.Request){
+	var request VerifierLoginRequestObject
+
+	var body VerifierLoginRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.VerifierLogin(ctx, request.(VerifierLoginRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "VerifierLogin")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(VerifierGetUser200Response); ok {
+		if err := validResponse.VisitVerifierGetUserResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if validResponse, ok := response.(VerifierGetUser500Response); ok {
+		if err := validResponse.VisitVerifierGetUserResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	}  else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("Unexpected response type: %T", response))
+	}
+}
+
+
+func (sh *strictHandler) VerifierDetails(w http.ResponseWriter, r *http.Request,id string){
+	var request VerifierGetUserRequestObject
+
+	var body VerifierGetUserRequestBody
+	// if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+	// 	sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+	// 	return
+	// }
+	body.OrgId=id
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.VerifierDetails(ctx,id)
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "VerifierDetails")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(VerifierGetUser200Response); ok {
+		if err := validResponse.VisitVerifierGetUserResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if validResponse, ok := response.(VerifierGetUser500Response); ok {
+		if err := validResponse.VisitVerifierGetUserResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	}  else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("Unexpected response type: %T", response))
+	}
+}
+
+
+
+
+
 
 func (sh *strictHandler) GetDigiLockerURL(w http.ResponseWriter, r *http.Request){
 	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {

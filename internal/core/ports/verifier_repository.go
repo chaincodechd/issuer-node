@@ -7,6 +7,7 @@ import (
 	// "github.com/google/uuid"
 	"github.com/iden3/iden3comm/v2/protocol"
 	"github.com/polygonid/sh-id-platform/internal/core/domain"
+	"github.com/polygonid/sh-id-platform/internal/db"
 )
 
 // VerifierService is the interface implemented by the verifier service
@@ -28,4 +29,7 @@ type VerifierRepository interface {
 	VerifyAdhar(ctx context.Context, itemId string, accessToken string, Authorization string, adharNumber string) (*domain.VerifyAadhaarResponse, error)
 	GetDetails(ctx context.Context, partonId string, requestId string, accessToken string)
 	VerifyGSTIN(ctx context.Context, partonId string,Authorization string, gstin string) (*domain.VerifyGSTINResponseNew, error)
+	VerifierLogin(ctx context.Context,conn db.Querier  ,orgusername string, orgPassword string)(*domain.VerifierDetails, error)
+	VerifierRegister(ctx context.Context, conn db.Querier, orgusername string, orgPassword string, orgID string, orgName string, orgEmail string) (string, error)
+	VerifierDetails(ctx context.Context,conn db.Querier , id string )(*domain.VerifierDetails, error)
 }

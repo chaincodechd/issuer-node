@@ -100,6 +100,40 @@ func (s *Server) SignIn(ctx context.Context, request GetUserRequestObject) (GetL
 	return resp, nil
 }
 
+
+func (s *Server) VerifierRegister(ctx context.Context, request VerifierRegisterRequestObject) (VerifierRegisterResponseObject, error) {
+
+	id := uuid.NewString()
+	_, err := s.verifierServer.VerifierRegister(ctx,id,request.Body.OrgUsername, request.Body.OrgPassword,request.Body.OrganizationName, request.Body.OrgEmail)
+	if err != nil {
+		return VerifierRegister500Response{"Failed to create Verifer", false}, err
+	}
+	return VerifierRegister200Response{"Verifier created Successfully",id, true}, nil
+}
+
+func (s *Server) VerifierLogin(ctx context.Context, request VerifierLoginRequestObject) (VerifierLoginResponseObject, error) {
+	// var resp GetRequestResponse = (GetRequestResponse(GetRequest200Response("Request print at log")));
+	res, err := s.verifierServer.VerifierLogin(ctx, request.Body.OrgUsername, request.Body.OrgPassword)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println("User :", res)
+	return VerifierLogin200Response{Msg: "Loged In Successfully",Status: true,Id:res.VerifierID,OrgName: res.OrgName,OrgUsername: res.UserName,OrgEmail: res.OrgGmail}, nil
+}
+
+func (s *Server) VerifierDetails(ctx context.Context, id string) (VerifierLoginResponseObject, error) {
+	// var resp GetRequestResponse = (GetRequestResponse(GetRequest200Response("Request print at log")));
+	res, err := s.verifierServer.VerifierDetails(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Println("User :", res)
+	return VerifierLogin200Response{Msg: "Loged In Successfully",Status: true,Id:res.VerifierID,OrgName: res.OrgName,OrgUsername: res.UserName,OrgEmail: res.OrgGmail}, nil
+}
+
+
+
 func (s *Server) AccessDigiLocker(ctx context.Context, request AccessDigiLockerRequestObject, Authorization string) (AccessDigiLockerResponseObject, error) {
 	// var resp GetRequestResponse = (GetRequestResponse(GetRequest200Response("Request print at log")));
 	res, err := s.verifierServer.AccessDigiLocker(ctx, request.Body.PatronId, request.Body.RequestId, Authorization, request.Body.Adhar, request.Body.PAN)
