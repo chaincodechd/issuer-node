@@ -4616,12 +4616,12 @@ func (sh *strictHandler) VerifierLogin(w http.ResponseWriter, r *http.Request){
 
 	if err != nil {
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
-	} else if validResponse, ok := response.(VerifierGetUser200Response); ok {
-		if err := validResponse.VisitVerifierGetUserResponse(w); err != nil {
+	} else if validResponse, ok := response.(VerifierLogin200Response); ok {
+		if err := validResponse.VisitVerifierLoginResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
-	} else if validResponse, ok := response.(VerifierGetUser500Response); ok {
-		if err := validResponse.VisitVerifierGetUserResponse(w); err != nil {
+	} else if validResponse, ok := response.(VerifierLogin500Response); ok {
+		if err := validResponse.VisitVerifierLoginResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	}  else if response != nil {
@@ -4652,12 +4652,12 @@ func (sh *strictHandler) VerifierDetails(w http.ResponseWriter, r *http.Request,
 
 	if err != nil {
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
-	} else if validResponse, ok := response.(VerifierGetUser200Response); ok {
-		if err := validResponse.VisitVerifierGetUserResponse(w); err != nil {
+	} else if validResponse, ok := response.(VerifierLogin200Response); ok {
+		if err := validResponse.VisitVerifierLoginResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
-	} else if validResponse, ok := response.(VerifierGetUser500Response); ok {
-		if err := validResponse.VisitVerifierGetUserResponse(w); err != nil {
+	} else if validResponse, ok := response.(VerifierLogin500Response); ok {
+		if err := validResponse.VisitVerifierLoginResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	}  else if response != nil {

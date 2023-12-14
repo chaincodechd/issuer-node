@@ -128,7 +128,7 @@ func (s *Server) VerifierDetails(ctx context.Context, id string) (VerifierLoginR
 	}
 
 	fmt.Println("User :", res)
-	return VerifierLogin200Response{Msg: "Loged In Successfully", Status: true, Id: res.VerifierID, OrgName: res.OrgName, OrgUsername: res.UserName, OrgEmail: res.OrgGmail}, nil
+	return VerifierLogin200Response{Msg: "Verifier details", Status: true, Id: res.VerifierID, OrgName: res.OrgName, OrgUsername: res.UserName, OrgEmail: res.OrgGmail}, nil
 }
 
 func (s *Server) AccessDigiLocker(ctx context.Context, request AccessDigiLockerRequestObject, Authorization string) (AccessDigiLockerResponseObject, error) {
