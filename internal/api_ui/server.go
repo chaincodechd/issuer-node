@@ -100,15 +100,14 @@ func (s *Server) SignIn(ctx context.Context, request GetUserRequestObject) (GetL
 	return resp, nil
 }
 
-
 func (s *Server) VerifierRegister(ctx context.Context, request VerifierRegisterRequestObject) (VerifierRegisterResponseObject, error) {
 
 	id := uuid.NewString()
-	_, err := s.verifierServer.VerifierRegister(ctx,id,request.Body.OrgUsername, request.Body.OrgPassword,request.Body.OrganizationName, request.Body.OrgEmail)
+	_, err := s.verifierServer.VerifierRegister(ctx, id, request.Body.OrgUsername, request.Body.OrgPassword, request.Body.OrganizationName, request.Body.OrgEmail)
 	if err != nil {
 		return VerifierRegister500Response{"Failed to create Verifer", false}, err
 	}
-	return VerifierRegister200Response{"Verifier created Successfully",id, true}, nil
+	return VerifierRegister200Response{"Verifier created Successfully", id, true}, nil
 }
 
 func (s *Server) VerifierLogin(ctx context.Context, request VerifierLoginRequestObject) (VerifierLoginResponseObject, error) {
@@ -118,7 +117,7 @@ func (s *Server) VerifierLogin(ctx context.Context, request VerifierLoginRequest
 		return nil, err
 	}
 	fmt.Println("User :", res)
-	return VerifierLogin200Response{Msg: "Loged In Successfully",Status: true,Id:res.VerifierID,OrgName: res.OrgName,OrgUsername: res.UserName,OrgEmail: res.OrgGmail}, nil
+	return VerifierLogin200Response{Msg: "Loged In Successfully", Status: true, Id: res.VerifierID, OrgName: res.OrgName, OrgUsername: res.UserName, OrgEmail: res.OrgGmail}, nil
 }
 
 func (s *Server) VerifierDetails(ctx context.Context, id string) (VerifierLoginResponseObject, error) {
@@ -129,10 +128,8 @@ func (s *Server) VerifierDetails(ctx context.Context, id string) (VerifierLoginR
 	}
 
 	fmt.Println("User :", res)
-	return VerifierLogin200Response{Msg: "Loged In Successfully",Status: true,Id:res.VerifierID,OrgName: res.OrgName,OrgUsername: res.UserName,OrgEmail: res.OrgGmail}, nil
+	return VerifierLogin200Response{Msg: "Loged In Successfully", Status: true, Id: res.VerifierID, OrgName: res.OrgName, OrgUsername: res.UserName, OrgEmail: res.OrgGmail}, nil
 }
-
-
 
 func (s *Server) AccessDigiLocker(ctx context.Context, request AccessDigiLockerRequestObject, Authorization string) (AccessDigiLockerResponseObject, error) {
 	// var resp GetRequestResponse = (GetRequestResponse(GetRequest200Response("Request print at log")));
@@ -396,13 +393,14 @@ func (s *Server) GenerateVC(ctx context.Context, request GenerateVCRequestObject
 	_, err = s.requestServer.UpdateStatus(ctx, request.Body.RequestId, "VC Issued", "VC Issued", "VC Issued")
 	_ = s.claimService.AddExpirationData(ctx, resp.ID.String(), "Normal", false)
 	n := `VC for ` + request.Body.RequestId.String() + ` has been created Successfully`
+	un := `Your Request` + request.Body.RequestId.String() + ` has been Approved Successfully and VC has been generated`
 	usernotification := &domain.NotificationData{
 		ID:                  uuid.New(),
 		User_id:             request.Body.UserDID,
 		Module:              "User",
 		NotificationType:    "Generated VC",
 		NotificationTitle:   "Generated VC",
-		NotificationMessage: n,
+		NotificationMessage: un,
 	}
 	_, err = s.requestServer.NewNotification(ctx, usernotification)
 	issuernotification := &domain.NotificationData{
@@ -514,9 +512,52 @@ func (s *Server) CreateAuthRequest(ctx context.Context, id uuid.UUID) (CreateAut
 		return nil, err
 	}
 	fmt.Println("Response :", res)
-	resp, _ := authRequestResponse(res)
+	resp, err := authRequestResponse(res)
+	if err != nil {
+		return nil, err
+	}
+
+	n := `Credential ` + id.String() + ` has been Verified Successfully`
+	un := `User` + res.To + `verified credential` + id.String() + `Successfully`
+	issuernotification := &domain.NotificationData{
+		ID:                  uuid.New(),
+		User_id:             res.To,
+		Module:              "Verifier",
+		NotificationType:    "Verification of VC",
+		NotificationTitle:   "Verification of VC done Successfully",
+		NotificationMessage: un,
+	}
+	_, err = s.requestServer.NewNotification(ctx, issuernotification)
+	usernotification := &domain.NotificationData{
+		ID:                  uuid.New(),
+		User_id:             res.To,
+		Module:              "User",
+		NotificationType:    "Verification of VC",
+		NotificationTitle:   "Verification of VC done Successfully",
+		NotificationMessage: n,
+	}
+	_, err = s.requestServer.NewNotification(ctx, usernotification)
 	// msgBytes, _ := json.Marshal(res)
+
+	_, err = s.requestServer.UpdateStatus(ctx, id, "VC accepted", "VC verified", "VC accepted")
 	return resp, nil
+}
+
+func (s *Server) CancleVerificationRequest(ctx context.Context, payload CancelRequestRequestObject) (CancelRequestResponseObject, error) {
+	_, err := s.requestServer.UpdateStatus(ctx, payload.Body.Id, "Request rejected", "Request rejected", "Request rejected")
+	if err != nil {
+		return CancelRequest500Response{"Failed to cancel request", false}, err
+	}
+	return CancelRequest200Response{"Request cancelled Successfully", true}, nil
+}
+
+func (s *Server) UpdateRequestStatus(ctx context.Context, request UpdateRequestStatusRequestObject) (UpdateRequestStatusResponseObject, error) {
+	// var resp GetRequestResponse = (GetRequestResponse(GetRequest200Response("Request print at log")));
+	_, err := s.requestServer.UpdateStatus(ctx, request.Body.Id, request.Body.IssuerStatus, request.Body.VerifierStatus, request.Body.WalletStatus)
+	if err != nil {
+		return UpdateRequestStatus500Response{"Failed to update status", false}, err
+	}
+	return UpdateRequestStatus200Response{"Status updated Successfully", true}, nil
 }
 
 func (s *Server) Callback(ctx context.Context, req callbackRequestObject) (VerifyAuthResponseObject, error) {

@@ -8,6 +8,8 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+
+	// "os"
 	"strconv"
 	"strings"
 	"time"
@@ -15,20 +17,28 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/google/uuid"
 	"github.com/iden3/go-circuits/v2"
+
+	// cir "github.com/iden3/go-circuits"
 	auth "github.com/iden3/go-iden3-auth/v2"
 	"github.com/iden3/go-iden3-auth/v2/loaders"
 	"github.com/iden3/go-iden3-auth/v2/pubsignals"
 	"github.com/iden3/go-iden3-auth/v2/state"
+
+	// "github.com/iden3/go-rapidsnark/types"
+	"github.com/golang-jwt/jwt"
+
+	// "github.com/iden3/go-jwz"
 	// "github.com/iden3/go-iden3-crypto/constants"
 	// "github.com/iden3/go-iden3-crypto/poseidon"
 	// "github.com/iden3/go-iden3-crypto/utils"
 	// "github.com/iden3/go-rapidsnark/types"
-	"github.com/iden3/iden3comm/v2/protocol"
 	// zk "github.com/iden3/go-jwz"
+	"github.com/iden3/iden3comm/v2/protocol"
 
 	// shell "github.com/ipfs/go-ipfs-api"
 	"github.com/polygonid/sh-id-platform/internal/core/domain"
 	"github.com/polygonid/sh-id-platform/internal/core/ports"
+	// "github.com/polygonid/sh-id-platform/internal/core/services"
 	"github.com/polygonid/sh-id-platform/internal/db"
 )
 
@@ -66,9 +76,9 @@ type VerifyAdharResponse struct {
 
 type VerifierDetails struct {
 	VerifierID string `json:"verifierId"`
-	UserName  string `json:"userName"`
-	OrgName string `json:"orgName"`
-	OrgGmail string `json:"orgGmail"`
+	UserName   string `json:"userName"`
+	OrgName    string `json:"orgName"`
+	OrgGmail   string `json:"orgGmail"`
 }
 
 type verifyresponse struct {
@@ -97,8 +107,8 @@ type verifyresponse struct {
 // type Token struct {
 // 	ZkProof *types.ZKProof // The third segment of the token.  Populated when you Parse a token
 
-// 	Alg       string // fields that are part of headers
-// 	CircuitID string // id of circuit that will be used for proving
+	// Alg       string // fields that are part of headers
+	// CircuitID string // id of circuit that will be used for proving
 
 // 	Method ProvingMethod // proving method to create a zkp
 
@@ -115,7 +125,6 @@ type verifyresponse struct {
 // 	ZKP       []byte                    `json:"zkp,omitempty"`
 // }
 
-
 // // ProvingMethod can be used add new methods for signing or verifying tokens.
 // type ProvingMethod interface {
 // 	Verify(messageHash []byte, proof *types.ZKProof, verificationKey []byte) error // Returns nil if proof is valid
@@ -124,20 +133,16 @@ type verifyresponse struct {
 // 	CircuitID() string
 // }
 
-
-
 var requestMap = make(map[string]interface{})
 var sessionID = 0
 
+// // ProofInputsPreparerHandlerFunc prepares inputs using hash message and circuit id
+// type ProofInputsPreparerHandlerFunc func(hash []byte, circuitID circuits.CircuitID) ([]byte, error)
 
-
-// ProofInputsPreparerHandlerFunc prepares inputs using hash message and circuit id
-type ProofInputsPreparerHandlerFunc func(hash []byte, circuitID circuits.CircuitID) ([]byte, error)
-
-// Prepare function is responsible to call provided handler for inputs preparation
-func (f ProofInputsPreparerHandlerFunc) Prepare(hash []byte, circuitID circuits.CircuitID) ([]byte, error) {
-	return f(hash, circuitID)
-}
+// // Prepare function is responsible to call provided handler for inputs preparation
+// func (f ProofInputsPreparerHandlerFunc) Prepare(hash []byte, circuitID circuits.CircuitID) ([]byte, error) {
+// 	return f(hash, circuitID)
+// }
 
 func (v *verifier) GetAuthRequest(ctx context.Context, schemaType string, schemaURL string, credSubject map[string]interface{}) (protocol.AuthorizationRequestMessage, error) {
 	// Audience is verifier id
@@ -170,9 +175,124 @@ func (v *verifier) GetAuthRequest(ctx context.Context, schemaType string, schema
 
 	// print request
 	fmt.Println("Request", request)
+
+	proof, err := v.GenerateZKProof(request)
+	if err != nil {
+		log.Println(err.Error())
+		return request, err
+	}
+	fmt.Println("proof", proof)
+
 	return request, nil
 }
 
+// GenerateZKProof generates a ZK proof using iden3 and jwz for AuthorizationRequestMessage
+func (v *verifier) GenerateZKProof(payload protocol.AuthorizationRequestMessage) (*string, error) {
+	// var prover zk.ProvingMethod
+
+	body := payload.Body.Scope[0].Query["credentialSubject"].(map[string]interface{})["id"].(string)
+	token := jwt.New(jwt.SigningMethodHS256)
+	claims := token.Claims.(jwt.MapClaims)
+	claims["body"] = body
+	// Set other claims if needed
+	// claims["aud"] = "audience"
+	// claims["exp"] = time.Now().Add(time.Hour).Unix()
+
+	// Sign the token with a secret key
+	tokenString, err := token.SignedString([]byte(payload.To))
+	if err != nil {
+		return nil, err
+	}
+	// Use the tokenString as needed
+	log.Println("JWT Token:", tokenString)
+
+	
+	res,err := v.VerifyJWZ(tokenString, body, payload.To)
+	if err != nil {
+		return nil, err
+	}
+	log.Println("result of verifyJWZ", res)
+	// Rest of the code...
+	return &tokenString, nil
+
+	// Hash the credential subject ID
+	// hash, err := zk.Hash([]byte(payload.Body.Scope[0].Query["credentialSubject"].(map[string]interface{})["id"].(string)))
+	// if err != nil {
+	// 	log.Println(err.Error())
+	// 	return nil, err
+	// }
+	// log.Println("hash.===============", hash)
+
+
+	// // Get the circuit ID
+	// id := payload.Body.Scope[0].CircuitID
+	// log.Println("id.===============", id)
+
+	// var proofInput zk.ProofInputsPreparerHandlerFunc
+
+	// // Prepare the inputs for the ZK proof
+	// input,err := proofInput.Prepare(hash.Bytes(), cir.CircuitID(id))
+
+	// token,err := zk.NewWithPayload(zk.ProvingMethodGroth16AuthInstance, hash.Bytes(),proofInput)
+	// if err != nil {
+	// 	log.Println(err.Error())
+	// 	return nil, err
+	// }
+	// log.Println("token.===============", token)
+
+	// // Generate the ZK proo
+	// provingKey := []byte(payload.Body.Scope[0].Query["provingKey"].(string))
+
+	// wasm, _ := os.ReadFile("./circuit.wasm")
+
+	// proof,err := zk.ProvingMethodGroth16AuthV2Instance.Prove(input,provingKey,wasm)
+	// if err != nil {
+	// 	log.Println(err.Error())
+	// 	return nil, err
+	// }
+	// // Print the generated proof
+	// fmt.Println("Proof:", proof)
+
+	// return proof, nil
+}
+
+// // VerifyZKProof verifies the ZK proof using the provided verification key
+// func VerifyZKProof(proof *types.ZKProof, verificationKey []byte) error {
+// 	var prover zk.ProvingMethod // Create an instance of the proving method
+
+// 	// Verify the proof using the verification key
+// 	err := prover.Verify(, proof, verificationKey)
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	return nil
+// }
+
+
+
+// // VerifyZKProof verifies the ZK proof using the provided verification key
+func (v *verifier) VerifyJWZ(jwzToken string,proof string,id string) (bool,error){
+	token := jwt.New(jwt.SigningMethodHS256)
+	claims := token.Claims.(jwt.MapClaims)
+	claims["body"] = proof
+	// Set other claims if needed
+	// claims["aud"] = "audience"
+	// claims["exp"] = time.Now().Add(time.Hour).Unix()
+
+	// Sign the token with a secret key
+	provingKey, err := token.SignedString([]byte(id))
+	if err != nil {
+		return false, err
+	}
+
+	if provingKey == jwzToken {
+		return true, nil
+	}else{
+		return false, nil
+	}
+
+}
 // // Callback works with sign-in callbacks
 func (v *verifier) Callback(ctx context.Context, sessionId string, tokenBytes []byte) (messageBytes []byte, err error) {
 
@@ -233,46 +353,63 @@ func (v *verifier) Callback(ctx context.Context, sessionId string, tokenBytes []
 	return messageBytes, nil
 }
 
+func MockPrepareAuthV2Inputs(_ []byte, _ circuits.CircuitID) ([]byte, error) {
+	// hash is already signed
+	return []byte(`{"genesisID":"19229084873704550357232887142774605442297337229176579229011342091594174977","profileNonce":"0","authClaim":["301485908906857522017021291028488077057","0","4720763745722683616702324599137259461509439547324750011830105416383780791263","4844030361230692908091131578688419341633213823133966379083981236400104720538","16547485850637761685","0","0","0"],"authClaimIncMtp":["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],"authClaimNonRevMtp":["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],"authClaimNonRevMtpAuxHi":"0","authClaimNonRevMtpAuxHv":"0","authClaimNonRevMtpNoAux":"1","challenge":"6110517768249559238193477435454792024732173865488900270849624328650765691494","challengeSignatureR8x":"10923900855019966925146890192107445603460581432515833977084358496785417078889","challengeSignatureR8y":"16158862443157007045624936621448425746188316255879806600364391221203989186031","challengeSignatureS":"51416591880507739389339515804072924841765472826035808894700970942045022090","claimsTreeRoot":"5156125448952672817978035354327403409438120028299513459509442000229340486813","revTreeRoot":"0","rootsTreeRoot":"0","state":"13749793311041076104545663747883540987785640262360452307923674522221753800226","gistRoot":"1243904711429961858774220647610724273798918457991486031567244100767259239747","gistMtp":["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],"gistMtpAuxHi":"1","gistMtpAuxHv":"1","gistMtpNoAux":"0"}`), nil
+}
 
+// func (v *verifier) GenerateZKProof(payload protocol.AuthorizationRequestMessage){
 
-
-// func (v *verifier) GenerateZKProof(){
-// 	// all headers must be protected
-// 	headers, err := json.Marshal(token.raw.Header)
+// 	var prover zk.ProvingMethod
+// 	hash,err := zk.Hash([]byte(payload.Body.Scope[0].Query["credentialSubject"].(map[string]interface{})["id"].(string)))
 // 	if err != nil {
-// 		return "", err
+// 		log.Println(err.Error())
+// 		return
 // 	}
-// 	token.raw.Protected = headers
-
-// 	msgHash, err := token.GetMessageHash()
+// 	id := payload.Body.Scope[0].CircuitID;
+// 	// input := zk.ProofInputsPreparerHandlerFunc(hash, circuits.CircuitID(id))
+// 	token, err := zk.NewWithPayload(prover, hash, circuits.CircuitID(id))
 // 	if err != nil {
-// 		return "", err
+// 		log.Println(err.Error())
+// 		return
 // 	}
+// 	fmt.Println("token", token)
 
-// 	inputs, err := token.inputsPreparer.Prepare(msgHash, circuits.CircuitID(token.CircuitID))
-// 	if err != nil {
-// 		return "", err
-// 	}
+// 	// // all headers must be protected
+// 	// headers, err := json.Marshal(token.raw.Header)
+// 	// if err != nil {
+// 	// 	return "", err
+// 	// }
+// 	// token.raw.Protected = headers
 
-// 	proof, err := token.Method.Prove(inputs, provingKey, wasm)
-// 	if err != nil {
-// 		return "", err
-// 	}
-// 	marshaledProof, err := json.Marshal(proof)
-// 	if err != nil {
-// 		return "", err
-// 	}
-// 	token.ZkProof = proof
-// 	token.raw.ZKP = marshaledProof
+// 	// msgHash, err := token.GetMessageHash()
+// 	// if err != nil {
+// 	// 	return "", err
+// 	// }
 
-// 	return token.CompactSerialize()
-// }
+// 	// inputs, err := token.inputsPreparer.Prepare(msgHash, circuits.CircuitID(token.CircuitID))
+// 	// if err != nil {
+// 	// 	return "", err
+// 	// }
+
+// 	// proof, err := token.Method.Prove(inputs, provingKey, wasm)
+// 	// if err != nil {
+// 	// 	return "", err
+// 	// }
+// 	// marshaledProof, err := json.Marshal(proof)
+// 	// if err != nil {
+// 	// 	return "", err
+// 	// }
+// 	// token.ZkProof = proof
+// 	// token.raw.ZKP = marshaledProof
+
+// 	// return token.CompactSerialize()
+// 	}
 
 // // Prove creates and returns a complete, proved JWZ.
 // // The token is proven using the Proving Method specified in the token.
 // func (v *verifier) Prove(provingKey, wasm []byte,token Token) (string, error) {
 
-
 // 	// all headers must be protected
 // 	headers, err := json.Marshal(token.raw.Header)
 // 	if err != nil {
@@ -303,7 +440,6 @@ func (v *verifier) Callback(ctx context.Context, sessionId string, tokenBytes []
 
 // 	return token.CompactSerialize()
 // }
-
 
 // // GetMessageHash returns bytes of jwz message hash.
 // func (token *Token) GetMessageHash() ([]byte, error) {
@@ -374,15 +510,6 @@ func (v *verifier) Callback(ctx context.Context, sessionId string, tokenBytes []
 // 		return nil, err
 // 	}
 // 	return res, err
-// }
-
-
-
-
-
-
-
-
 
 func (v *verifier) VerifierRegister(ctx context.Context, conn db.Querier, orgusername string, orgPassword string, orgID string, orgName string, orgEmail string) (string, error) {
 
@@ -396,9 +523,9 @@ func (v *verifier) VerifierRegister(ctx context.Context, conn db.Querier, orguse
 
 func (v *verifier) VerifierLogin(ctx context.Context, conn db.Querier, orgusername string, orgPassword string) (*domain.VerifierDetails, error) {
 
-	res:= VerifierDetails{}
-	
-	err := conn.QueryRow(ctx, "SELECT id,orgname,username,user_gmail FROM verifiers WHERE username=$1 AND userpassword=$2", orgusername, orgPassword).Scan(res.VerifierID, res.OrgName, res.UserName, res.OrgGmail)
+	res := VerifierDetails{}
+
+	err := conn.QueryRow(ctx, "SELECT id,orgname,username,user_gmail FROM verifiers WHERE username=$1 AND userpassword=$2", orgusername, orgPassword).Scan(&res.VerifierID, &res.OrgName, &res.UserName, &res.OrgGmail)
 	if err != nil {
 		log.Println(err.Error())
 		return nil, err
@@ -406,17 +533,17 @@ func (v *verifier) VerifierLogin(ctx context.Context, conn db.Querier, orguserna
 	log.Println("res", res)
 	return &domain.VerifierDetails{
 		VerifierID: res.VerifierID,
-		UserName: res.UserName,
-		OrgName: res.OrgName,
-		OrgGmail: res.OrgGmail,
+		UserName:   res.UserName,
+		OrgName:    res.OrgName,
+		OrgGmail:   res.OrgGmail,
 	}, nil
 	// fmt.Println("orgUser", orgUser)
 }
 
 func (v *verifier) VerifierDetails(ctx context.Context, conn db.Querier, id string) (*domain.VerifierDetails, error) {
 
-	res:= VerifierDetails{}
-	err := conn.QueryRow(ctx, "SELECT id,orgname,username,user_gmail FROM verifiers WHERE id=$1", id).Scan(res.VerifierID, res.OrgName, res.UserName, res.OrgGmail)
+	res := VerifierDetails{}
+	err := conn.QueryRow(ctx, "SELECT id,orgname,username,user_gmail FROM verifiers WHERE id=$1", id).Scan(&res.VerifierID, &res.OrgName, &res.UserName, &res.OrgGmail)
 	if err != nil {
 		log.Println(err.Error())
 		return nil, err
@@ -424,9 +551,9 @@ func (v *verifier) VerifierDetails(ctx context.Context, conn db.Querier, id stri
 	log.Println("res", res)
 	return &domain.VerifierDetails{
 		VerifierID: res.VerifierID,
-		UserName: res.UserName,
-		OrgName: res.OrgName,
-		OrgGmail: res.OrgGmail,
+		UserName:   res.UserName,
+		OrgName:    res.OrgName,
+		OrgGmail:   res.OrgGmail,
 	}, nil
 	// fmt.Println("orgUser", orgUser)
 }

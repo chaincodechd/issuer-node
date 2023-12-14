@@ -681,6 +681,10 @@ type ServerInterface interface {
 
 	VerifierDetails(w http.ResponseWriter, r *http.Request,id string)
 
+	UpdateRequestStatus(w http.ResponseWriter, r *http.Request)
+
+	CancleVerificationRequest(w http.ResponseWriter, r *http.Request,id Id)
+
 }
 
 // Signing up the user
@@ -715,6 +719,44 @@ func (siw *ServerInterfaceWrapper) SignIn(w http.ResponseWriter, r *http.Request
 	}
 
 	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+func (siw *ServerInterfaceWrapper) CancleVerificationRequest(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var id Id
+
+	err := runtime.BindStyledParameterWithLocation("simple", false, "id", runtime.ParamLocationPath, chi.URLParam(r, "id"), &id)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CancleVerificationRequest(w, r,id)
+	})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+func (siw *ServerInterfaceWrapper) UpdateRequestStatus(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.UpdateRequestStatus(w, r)
+	})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+
 }
 
 func (siw *ServerInterfaceWrapper) VerifierRegister(w http.ResponseWriter, r *http.Request) {
@@ -2313,6 +2355,16 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/v1/VerifierDetails/{id}", wrapper.VerifierDetails)
 	})
+
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/v1/updateRequestStatus", wrapper.UpdateRequestStatus)
+	})
+
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/v1/cancelRequest/{id}", wrapper.CancleVerificationRequest)
+	})
+
+
 	return r
 }
 
@@ -4107,6 +4159,83 @@ func (response VerifierGetUser500ResponseBody) VisitVerifierGetUserResponse(w ht
 type SignUpRequestObject struct{
 	Body *SignUpRequest
 }
+
+type UpdateRequestStatusRequestBody struct{
+	Id uuid.UUID `json:"id"`
+	IssuerStatus string `json:"request_status"`
+	VerifierStatus string `json:"verifier_status"`
+	WalletStatus string `json:"wallet_status"`
+}
+
+
+
+type UpdateRequestStatusRequestObject struct{
+	Body *UpdateRequestStatusRequestBody
+}
+
+type UpdateRequestStatusResponseObject interface{
+	VisitUpdateRequestStatusResponse(w http.ResponseWriter) error
+}
+
+type UpdateRequestStatus200Response struct{
+	Msg string `json:"msg"`
+	Status bool `json:"status"`
+}
+
+func (response UpdateRequestStatus200Response) VisitUpdateRequestStatusResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateRequestStatus500Response struct{
+	Msg string `json:"msg"`
+	Status bool `json:"status"`
+}
+
+func (response UpdateRequestStatus500Response) VisitUpdateRequestStatusResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CancelRequestRequestBody struct{
+	Id uuid.UUID `json:"id"`
+}
+
+type CancelRequestRequestObject struct{
+	Body *CancelRequestRequestBody
+}
+
+type CancelRequestResponseObject interface{
+	VisitCancelRequestResponse(w http.ResponseWriter) error
+}
+
+type CancelRequest200Response struct{
+	Msg string `json:"msg"`
+	Status bool `json:"status"`
+}
+
+func (response CancelRequest200Response) VisitCancelRequestResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CancelRequest500Response struct{
+	Msg string `json:"msg"`
+	Status bool `json:"status"`
+}
+
+func (response CancelRequest500Response) VisitCancelRequestResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+	return json.NewEncoder(w).Encode(response)
+}
+
+
+
+
 // func (response GetAllNotifications200Response ) VisitGetAllNotification(w http.ResponseWriter) error {
 // 	w.Header().Set("Content-Type", "application/json")
 // 	w.WriteHeader(200)
@@ -4265,7 +4394,11 @@ type StrictServerInterface interface {
 
 	VerifierDetails(ctx context.Context, id string)(VerifierLoginResponseObject,error)
 
+	UpdateRequestStatus(ctx context.Context, request UpdateRequestStatusRequestObject)(UpdateRequestStatusResponseObject,error)
+
+	CancleVerificationRequest(ctx context.Context,request CancelRequestRequestObject)(CancelRequestResponseObject,error)
 }
+
 
 type StrictHandlerFunc = runtime.StrictHttpHandlerFunc
 type StrictMiddlewareFunc = runtime.StrictHttpMiddlewareFunc
@@ -4356,6 +4489,76 @@ func (sh *strictHandler) SignIn(w http.ResponseWriter, r *http.Request){
 		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("Unexpected response type: %T", response))
 	}
 }
+
+func(sh *strictHandler) UpdateRequestStatus(w http.ResponseWriter, r *http.Request){
+	var request UpdateRequestStatusRequestObject
+
+	var body UpdateRequestStatusRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.UpdateRequestStatus(ctx, request.(UpdateRequestStatusRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UpdateRequestStatus")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	}else if validResponse, ok := response.(UpdateRequestStatus200Response); ok {
+		if err := validResponse.VisitUpdateRequestStatusResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	}else if validResponse, ok := response.(UpdateRequestStatus500Response); ok {
+		if err := validResponse.VisitUpdateRequestStatusResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	}else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("Unexpected response type: %T", response))
+	}
+}
+
+func(sh *strictHandler) CancleVerificationRequest(w http.ResponseWriter, r *http.Request,id uuid.UUID){
+	var request CancelRequestRequestObject
+
+	var body CancelRequestRequestBody
+
+	body.Id=id
+
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CancleVerificationRequest(ctx, request.(CancelRequestRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CancleVerificationRequest")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+
+	}else if validResponse, ok := response.(CancelRequest200Response); ok {
+		if err := validResponse.VisitCancelRequestResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	}else if validResponse, ok := response.(CancelRequest500Response); ok {
+		if err := validResponse.VisitCancelRequestResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	}else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("Unexpected response type: %T", response))
+	}
+}
+
 
 func (sh *strictHandler) VerifierRegister(w http.ResponseWriter, r *http.Request){
 	var request VerifierRegisterRequestObject
