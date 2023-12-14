@@ -13,6 +13,8 @@ import {
   UserDIDResponse,
   UserDetails,
   UserResponse,
+  VerifierLoginResponse,
+  VerifierSignupResponse,
   userProfile,
 } from "src/domain/user";
 import { API_VERSION } from "src/utils/constants";
@@ -121,6 +123,31 @@ export const signupResponse = getStrictParser<SignupResponse, SignupResponse>()(
     status: z.boolean(),
   })
 );
+
+export const verifierSignupResponse = getStrictParser<
+  VerifierSignupResponse,
+  VerifierSignupResponse
+>()(
+  z.object({
+    msg: z.string(),
+    status: z.boolean(),
+    verifierId: z.string(),
+  })
+);
+
+export const verifierLoginRespopnse = getStrictParser<
+  VerifierLoginResponse,
+  VerifierLoginResponse
+>()(
+  z.object({
+    id: z.string(),
+    msg: z.string(),
+    orgEmail: z.string(),
+    orgName: z.string(),
+    orgUsername: z.string(),
+    status: z.boolean(),
+  })
+);
 export const userResponseParser = getStrictParser<UserResponse, UserResponse>()(
   z.object({
     msg: z.string(),
@@ -146,6 +173,13 @@ export type GetUserDID = {
     method: string;
     network: string;
   };
+};
+
+export type Verifier = {
+  OrgEmail: string;
+  OrgPassword: string;
+  OrgUsername: string;
+  OrganizationName: string;
 };
 
 export const userDIDResponse = getStrictParser<UserDIDResponse, UserDIDResponse>()(
@@ -326,7 +360,7 @@ export async function getDigiLockerDetails({
     });
     console.log(response.data);
 
-    return buildSuccessResponse(digiLockerUrlResponse.parse(response.data));
+    return buildSuccessResponse(digiLockerDetailsResponse.parse(response.data));
   } catch (error) {
     return buildErrorResponse(error);
   }
@@ -373,6 +407,60 @@ export async function signUp({
     console.log(response.data);
 
     return buildSuccessResponse(signupResponse.parse(response.data));
+  } catch (error) {
+    return buildErrorResponse(error);
+  }
+}
+
+// Verrifier Signup
+export async function verifierSignup({
+  env,
+  payload,
+}: {
+  env: Env;
+  payload: Verifier;
+}): Promise<Response<VerifierSignupResponse>> {
+  try {
+    const response = await axios({
+      baseURL: env.api.url,
+      data: payload,
+      headers: {
+        Authorization: buildAuthorizationHeader(env),
+      },
+      method: "POST",
+      url: `${API_VERSION}/VerifierRegister`,
+    });
+
+    console.log(response.data);
+
+    return buildSuccessResponse(verifierSignupResponse.parse(response.data));
+  } catch (error) {
+    return buildErrorResponse(error);
+  }
+}
+
+export async function verifierLogin({
+  env,
+  OrgPassword,
+  OrgUsername,
+}: {
+  OrgPassword: string;
+  OrgUsername: string;
+  env: Env;
+}): Promise<Response<VerifierLoginResponse>> {
+  try {
+    const response = await axios({
+      baseURL: env.api.url,
+      data: { OrgPassword, OrgUsername },
+      headers: {
+        Authorization: buildAuthorizationHeader(env),
+      },
+      method: "POST",
+      url: `${API_VERSION}/VerifierLogin`,
+    });
+    console.log(response.data);
+
+    return buildSuccessResponse(verifierLoginRespopnse.parse(response.data));
   } catch (error) {
     return buildErrorResponse(error);
   }

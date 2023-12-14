@@ -113,8 +113,33 @@ export function Profile() {
       id: response1?.id || "",
       requestId: response2?.result.requestId || "",
     }).then((response) => {
+      console.log("hiii", response.success);
       if (response.success) {
-        console.log(response);
+        const updatePayload = {
+          Address: "xyz",
+          Adhar: "894365783749",
+          DOB: response.data.result.userDetails.dob,
+          DocumentationSource: "digilocker",
+          Gmail: "test@gmail.com",
+          Gstin: "tess12",
+          ID: userDID,
+          Name: response.data.result.userDetails.name,
+          Owner: "xyz",
+          PAN: response.data.result.files[1]?.id.split("-")[2],
+          PhoneNumber: "9113073303",
+        };
+        void updateUser({
+          env,
+          updatePayload,
+        }).then((updateResponse) => {
+          if (updateResponse.success) {
+            localStorage.setItem("profile", "true");
+            void messageAPI.success("Profile Updated");
+            setOpenModal(false);
+          } else {
+            void messageAPI.error("Wrong Credentials");
+          }
+        });
         setOpenVerificationModal(false);
       } else {
         window.alert("please complete the step first");

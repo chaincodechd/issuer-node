@@ -126,3 +126,18 @@ export type SignupResponse = {
 export type UserDIDResponse = {
   identifier: string;
 };
+
+export type VerifierSignupResponse = {
+  msg: string;
+  verifierId: string;
+  status: boolean;
+};
+
+export type VerifierLoginResponse = {
+  msg: string;
+  status: boolean;
+  id: string;
+  orgName: string;
+  orgUsername: string;
+  orgEmail: string;
+};

@@ -31,9 +31,9 @@ export function VerifyIdentityModal({
       if (response.success) {
         onClose();
         onVerify();
-        void messageAPI.success(response.data.msg);
+        void messageAPI.success("Identity Verified");
       } else {
-        void messageAPI.error(response.error.message);
+        void messageAPI.error("Identity Verification Request Failed");
       }
 
       setIsLoading(false);

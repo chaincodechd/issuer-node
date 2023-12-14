@@ -11,3 +11,10 @@ export type Signup = {
   userDID: string;
   username: string;
 };
+
+export type VerifierSignup = {
+  OrgEmail: string;
+  OrgPassword: string;
+  OrgUsername: string;
+  OrganizationName: string;
+};

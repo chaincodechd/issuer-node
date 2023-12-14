@@ -1,12 +1,12 @@
 import { Modal, message } from "antd";
 import { useState } from "react";
-import { generatePath, useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 import { createAuthRequest } from "src/adapters/api/credentials";
 import { ReactComponent as IconClose } from "src/assets/icons/x.svg";
 import { useEnvContext } from "src/contexts/Env";
 import { Request } from "src/domain";
-import { ROUTES } from "src/routes";
-import { CLOSE, VERIFY_IDENTITY } from "src/utils/constants";
+// import { ROUTES } from "src/routes";
+import { CLOSE } from "src/utils/constants";
 
 export function CreateAuthRequestModal({
   onClose,
@@ -15,7 +15,7 @@ export function CreateAuthRequestModal({
   onClose: () => void;
   request: Request;
 }) {
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const env = useEnvContext();
 
   const [messageAPI, messageContext] = message.useMessage();
@@ -24,24 +24,26 @@ export function CreateAuthRequestModal({
 
   const handleCreateAuthRequest = () => {
     setIsLoading(true);
+    setTimeout(() => {
+      const payload = {
+        cred_id: request.proof_id,
+      };
 
-    const payload = {
-      cred_id: request.proof_id,
-    };
-
-    createAuthRequest({ env, payload })
-      .then((response) => {
-        if (response.success) {
-          void navigate(
-            generatePath(ROUTES.qrCodeDisplay.path.replace(":credentialID", request.proof_id)),
-            { state: { data: response.data } }
-          );
-        } else {
-          void messageAPI.error(response.error.message);
-        }
-        setIsLoading(false);
-      })
-      .catch((error) => console.log(error));
+      createAuthRequest({ env, payload })
+        .then((response) => {
+          if (response.success) {
+            void messageAPI.success("Credential Verified Successfully").then(() => onClose());
+            // void navigate(
+            //   generatePath(ROUTES.qrCodeDisplay.path.replace(":credentialID", request.proof_id)),
+            //   { state: { data: response.data } }
+            // );
+          } else {
+            void messageAPI.error("Credential Verification failed");
+          }
+          setIsLoading(false);
+        })
+        .catch((error) => console.log(error));
+    }, 5000);
   };
 
   return (
@@ -55,11 +57,11 @@ export function CreateAuthRequestModal({
         closeIcon={<IconClose />}
         maskClosable
         okButtonProps={{ danger: true, loading: isLoading }}
-        okText={VERIFY_IDENTITY}
+        okText="Yes"
         onCancel={onClose}
         onOk={() => void handleCreateAuthRequest()}
         open
-        title="Are you sure you want to verify this identity?"
+        title="Are you sure you want to verify this credential?"
       >
         {/* <Space direction="vertical">
           <Typography.Text type="secondary">Are you Sure?</Typography.Text>

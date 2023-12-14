@@ -46,10 +46,10 @@ export function IssueCredentialUser({
         void issueCredentialRequest({ dataSchema, env }).then((response) => {
           if (response.success) {
             onIssue();
-            void messageAPI.success("Credential Request Sent").then(() => onClose());
+            void messageAPI.success("Credential Issued Successfully").then(() => onClose());
           } else {
             setIsLoading(false);
-            void messageAPI.error(response.error.message);
+            void messageAPI.error("Credential Issued Failed").then(() => onClose());
           }
         });
       } else {

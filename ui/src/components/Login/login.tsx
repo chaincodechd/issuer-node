@@ -1,23 +1,28 @@
 import { LockOutlined, UserOutlined } from "@ant-design/icons";
 import { Button, Checkbox, Form, Input, Space, message } from "antd";
+import { useState } from "react";
 import { Link, generatePath, useNavigate } from "react-router-dom";
-import { login } from "src/adapters/api/user";
+import { login, verifierLogin } from "src/adapters/api/user";
 import { useEnvContext } from "src/contexts/Env";
 import { useUserContext } from "src/contexts/UserDetails";
+import { useVerifierContext } from "src/contexts/VerifierDetails";
 import { LoginLabel } from "src/domain";
 import { ROUTES } from "src/routes";
 
 export const Login = () => {
   const navigate = useNavigate();
   const { setUserDetails } = useUserContext();
+  const { setVerifierDetails } = useVerifierContext();
   const [messageAPI, messageContext] = message.useMessage();
   const env = useEnvContext();
-
+  const [loginType, setLoginType] = useState<string>("user");
+  //console.log(loginType);
   const onFinish = async (values: LoginLabel) => {
     console.log("Received values of form: ", values);
-    if (values.username !== "issuer" && values.username !== "verifier") {
+    if (values.username !== "issuer" && loginType === "user") {
+      console.log("user");
       try {
-        console.log(env);
+        //console.log(env);
         const userDetails = await login({
           env,
           password: values.password,
@@ -44,7 +49,44 @@ export const Login = () => {
         // Handle the error, e.g., show an error message
         console.error("An error occurred:", error);
       }
-    } else {
+    } else if (loginType === "verifier") {
+      console.log("verifier");
+      // localStorage.setItem("profile", "true");
+      // localStorage.setItem("user", values.username);
+      // navigate(generatePath(ROUTES.request.path));
+      // localStorage.removeItem("user");
+      // localStorage.removeItem("profile");
+      // localStorage.removeItem("userId");
+      try {
+        //console.log(env);
+        const verifierDetails = await verifierLogin({
+          env,
+          OrgPassword: values.password,
+          OrgUsername: values.username,
+        });
+
+        if (verifierDetails.success) {
+          localStorage.setItem("profile", "true");
+          localStorage.setItem("OrganizationName", verifierDetails.data.orgName);
+          localStorage.setItem("user", "verifier");
+          localStorage.setItem("name", verifierDetails.data.orgUsername);
+          navigate(generatePath(ROUTES.request.path));
+          setVerifierDetails(
+            verifierDetails.data.orgName,
+            verifierDetails.data.orgUsername,
+            verifierDetails.data.orgEmail,
+            verifierDetails.data.id
+          );
+        } else {
+          void messageAPI.error("Wrong Credentials");
+        }
+      } catch (error) {
+        // Handle the error, e.g., show an error message
+        console.error("An error occurred:", error);
+      }
+    }
+    if (loginType === "issuer") {
+      console.log("issuer");
       localStorage.setItem("profile", "true");
       localStorage.setItem("user", values.username);
       navigate(generatePath(ROUTES.request.path));
@@ -54,6 +96,29 @@ export const Login = () => {
   return (
     <>
       {messageContext}
+      {/* Toggle button for selecting login type */}
+      <Form.Item>
+        <Button.Group>
+          <Button
+            onClick={() => setLoginType("user")}
+            type={loginType === "user" ? "primary" : "default"}
+          >
+            User
+          </Button>
+          <Button
+            onClick={() => setLoginType("verifier")}
+            type={loginType === "verifier" ? "primary" : "default"}
+          >
+            Verifier
+          </Button>
+          <Button
+            onClick={() => setLoginType("issuer")}
+            type={loginType === "issuer" ? "primary" : "default"}
+          >
+            Issuer
+          </Button>
+        </Button.Group>
+      </Form.Item>
       <Form
         className="login-form"
         initialValues={{
@@ -100,11 +165,23 @@ export const Login = () => {
         </Form.Item>
 
         <Form.Item>
-          <Space>
+          <Space
+            style={{
+              display: "flex",
+              justifyContent: "center",
+            }}
+          >
             <Button className="login-form-button" htmlType="submit" type="primary">
               Log in
             </Button>
-            Or <Link to={ROUTES.register.path}>register now</Link>
+            {loginType != "issuer" && (
+              <>
+                Or{" "}
+                <Link to={generatePath(ROUTES.register.path, { typeOfUser: loginType })}>
+                  Register
+                </Link>
+              </>
+            )}
           </Space>
         </Form.Item>
       </Form>

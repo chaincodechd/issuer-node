@@ -60,11 +60,10 @@ export function VerifierRequestVCModal({
   const handleVerifierVCRequest = async () => {
     const schema = schemaList.find((item) => item.type === request.credentialSubject.type);
     setIsLoading(true);
-
     const payload = {
       Age: age,
       ProofId: request.id,
-      ProofType: "Adhar",
+      ProofType: schema?.type,
       RequestType: "VerifyVC",
       RoleType: "Individual",
       schemaID: schema?.id || "",
@@ -74,10 +73,10 @@ export function VerifierRequestVCModal({
 
     await requestVC({ env, payload }).then((response) => {
       if (response.success) {
-        void messageAPI.success(response.data.msg);
+        void messageAPI.success("Requested Successfully");
         onClose();
       } else {
-        void messageAPI.error(response.error.message);
+        void messageAPI.error("Request Failed");
       }
 
       setIsLoading(false);
@@ -95,11 +94,11 @@ export function VerifierRequestVCModal({
         closeIcon={<IconClose />}
         maskClosable
         okButtonProps={{ danger: true, loading: isLoading }}
-        okText={VERIFY_IDENTITY}
+        okText="Yes"
         onCancel={onClose}
         onOk={() => void handleVerifierVCRequest()}
         open
-        title="Are you sure you want to verify this identity?"
+        title="Are you sure you want to request for VC?"
       ></Modal>
     </>
   );

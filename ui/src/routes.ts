@@ -95,7 +95,7 @@ export const ROUTES: Routes = {
   },
   register: {
     layout: "fullWidth",
-    path: "/register",
+    path: "/register/:typeOfUser",
   },
   request: {
     layout: "sider",
