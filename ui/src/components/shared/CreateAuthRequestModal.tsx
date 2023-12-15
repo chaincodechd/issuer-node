@@ -22,6 +22,7 @@ export function CreateAuthRequestModal({
   const [messageAPI, messageContext] = message.useMessage();
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isNoLoading, setIsNoLoading] = useState<boolean>(false);
 
   const handleCreateAuthRequest = () => {
     setIsLoading(true);
@@ -49,7 +50,7 @@ export function CreateAuthRequestModal({
   };
 
   const handleCancel = () => {
-    setIsLoading(true);
+    setIsNoLoading(true);
     setTimeout(() => {
       cancelVerificationRequest({
         env,
@@ -61,7 +62,7 @@ export function CreateAuthRequestModal({
           } else {
             void messageAPI.error("Failed to reject");
           }
-          setIsLoading(false);
+          setIsNoLoading(false);
         })
         .catch((error) => console.log(error));
     }, 5000);
@@ -79,20 +80,20 @@ export function CreateAuthRequestModal({
           <Button
             danger={true}
             key="ok"
-            onClick={() => void handleCreateAuthRequest()}
+            loading={isLoading}
+            onClick={handleCreateAuthRequest}
             type="primary"
           >
             Yes
           </Button>,
-          <Button danger={true} key="cancel" onClick={() => void handleCancel()}>
+          <Button danger={true} key="cancel" loading={isNoLoading} onClick={handleCancel}>
             No
           </Button>,
         ]}
         maskClosable
         okButtonProps={{ danger: true, loading: isLoading }}
-        okText="Yes"
         onCancel={onClose}
-        onOk={() => void handleCreateAuthRequest()}
+        onOk={handleCreateAuthRequest}
         open
         title="Are you sure you want to verify this credential?"
       >
