@@ -63,6 +63,7 @@ export function RequestsTable() {
   const showDefaultContent =
     requests.status === "successful" && requestsList.length === 0 && queryParam === null;
   let tableColumns: ColumnsType<Request>;
+
   if (User === "verifier" || User === "issuer") {
     tableColumns = [
       {
@@ -105,7 +106,7 @@ export function RequestsTable() {
         dataIndex: "request_type",
         ellipsis: { showTitle: false },
         key: "requestType",
-        render: (requestType: Request["requestType"]) => (
+        render: (requestType: Request["request_type"]) => (
           <Tooltip placement="topLeft" title={requestType}>
             <Typography.Text strong>{requestType}</Typography.Text>
           </Tooltip>
@@ -248,7 +249,7 @@ export function RequestsTable() {
         dataIndex: "request_type",
         ellipsis: { showTitle: false },
         key: "requestType",
-        render: (requestType: Request["requestType"]) => (
+        render: (requestType: Request["request_type"]) => (
           <Tooltip placement="topLeft" title={requestType}>
             <Typography.Text strong>{requestType}</Typography.Text>
           </Tooltip>
@@ -337,6 +338,7 @@ export function RequestsTable() {
                       },
                       {
                         danger: true,
+                        disabled: request.request_type === "GenerateNewVC",
                         key: "verify",
                         label: "Show Details",
                         onClick: () => setcreateAuthRequest(request),

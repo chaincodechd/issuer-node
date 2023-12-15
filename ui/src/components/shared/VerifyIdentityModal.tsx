@@ -29,9 +29,8 @@ export function VerifyIdentityModal({
 
     void verifyIdentityRequest({ env, id }).then((response) => {
       if (response.success) {
-        onClose();
+        void messageAPI.success("Identity Verified").then(() => onClose());
         onVerify();
-        void messageAPI.success("Identity Verified");
       } else {
         void messageAPI.error("Identity Verification Request Failed");
       }

@@ -73,8 +73,7 @@ export function VerifierRequestVCModal({
 
     await requestVC({ env, payload }).then((response) => {
       if (response.success) {
-        void messageAPI.success("Requested Successfully");
-        onClose();
+        void messageAPI.success("Requested Successfully").then(() => onClose());
       } else {
         void messageAPI.error("Request Failed");
       }

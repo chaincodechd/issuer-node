@@ -13,8 +13,8 @@ export type Request = {
   proof_type: string;
   requestDate: Date;
   requestId: string;
-  requestType: string;
   request_status: string;
+  request_type: string;
   revNonce: number;
   revoked: boolean;
   role_type: string;

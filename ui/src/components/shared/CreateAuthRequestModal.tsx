@@ -1,12 +1,12 @@
-import { Modal, message } from "antd";
+import { Button, Modal, message } from "antd";
 import { useState } from "react";
 // import { useNavigate } from "react-router-dom";
-import { createAuthRequest } from "src/adapters/api/credentials";
+import { cancelVerificationRequest, createAuthRequest } from "src/adapters/api/credentials";
 import { ReactComponent as IconClose } from "src/assets/icons/x.svg";
 import { useEnvContext } from "src/contexts/Env";
 import { Request } from "src/domain";
 // import { ROUTES } from "src/routes";
-import { CLOSE } from "src/utils/constants";
+// import { CLOSE } from "src/utils/constants";
 
 export function CreateAuthRequestModal({
   onClose,
@@ -17,6 +17,7 @@ export function CreateAuthRequestModal({
 }) {
   // const navigate = useNavigate();
   const env = useEnvContext();
+  // console.log(request.id);
 
   const [messageAPI, messageContext] = message.useMessage();
 
@@ -27,6 +28,7 @@ export function CreateAuthRequestModal({
     setTimeout(() => {
       const payload = {
         cred_id: request.proof_id,
+        request_id: request.id,
       };
 
       createAuthRequest({ env, payload })
@@ -46,15 +48,46 @@ export function CreateAuthRequestModal({
     }, 5000);
   };
 
+  const handleCancel = () => {
+    setIsLoading(true);
+    setTimeout(() => {
+      cancelVerificationRequest({
+        env,
+        id: request.id,
+      })
+        .then((response) => {
+          if (response.success) {
+            void messageAPI.success("Verification Rejected Successfully").then(() => onClose());
+          } else {
+            void messageAPI.error("Failed to reject");
+          }
+          setIsLoading(false);
+        })
+        .catch((error) => console.log(error));
+    }, 5000);
+  };
+
   return (
     <>
       {messageContext}
 
       <Modal
-        cancelText={CLOSE}
         centered
         closable
         closeIcon={<IconClose />}
+        footer={[
+          <Button
+            danger={true}
+            key="ok"
+            onClick={() => void handleCreateAuthRequest()}
+            type="primary"
+          >
+            Yes
+          </Button>,
+          <Button danger={true} key="cancel" onClick={() => void handleCancel()}>
+            No
+          </Button>,
+        ]}
         maskClosable
         okButtonProps={{ danger: true, loading: isLoading }}
         okText="Yes"

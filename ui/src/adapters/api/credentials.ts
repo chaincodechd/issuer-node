@@ -5,7 +5,7 @@ import { Response, buildErrorResponse, buildSuccessResponse } from "src/adapters
 import { ID, IDParser, Message, buildAuthorizationHeader, messageParser } from "src/adapters/api";
 import { datetimeParser, getListParser, getStrictParser } from "src/adapters/parsers";
 import { Credential, Env, IssuedQRCode, Json, Link, LinkStatus, ProofType } from "src/domain";
-import { CreateAuthRequestResponse } from "src/domain/credential";
+import { CancelRequestResponse, CreateAuthRequestResponse } from "src/domain/credential";
 import { API_VERSION, QUERY_SEARCH_PARAM, STATUS_SEARCH_PARAM } from "src/utils/constants";
 import { List } from "src/utils/types";
 
@@ -85,6 +85,13 @@ export const CreateAuthRequestParser = getStrictParser<
     thid: z.string(),
     typ: z.string(),
     type: z.string(),
+  })
+);
+
+export const cancelRequest = getStrictParser<CancelRequestResponse, CancelRequestResponse>()(
+  z.object({
+    msg: z.string(),
+    status: z.boolean(),
   })
 );
 export type CredentialStatus = "all" | "revoked" | "expired";
@@ -562,6 +569,30 @@ export async function createAuthRequest({
     });
 
     return buildSuccessResponse(CreateAuthRequestParser.parse(response.data));
+  } catch (error) {
+    return buildErrorResponse(error);
+  }
+}
+
+export async function cancelVerificationRequest({
+  env,
+  id,
+}: {
+  env: Env;
+  id: string;
+}): Promise<Response<CancelRequestResponse>> {
+  try {
+    const response = await axios({
+      baseURL: env.api.url,
+      headers: {
+        Authorization: buildAuthorizationHeader(env),
+      },
+      method: "POST",
+      url: `${API_VERSION}/cancelRequest/${id}`,
+    });
+
+    console.log(response.data);
+    return buildSuccessResponse(cancelRequest.parse(response.data));
   } catch (error) {
     return buildErrorResponse(error);
   }

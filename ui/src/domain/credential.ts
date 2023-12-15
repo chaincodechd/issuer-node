@@ -68,3 +68,8 @@ export type CreateAuthRequestResponse = {
   typ: string;
   type: string;
 };
+
+export type CancelRequestResponse = {
+  msg: string;
+  status: boolean;
+};
