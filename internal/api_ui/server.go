@@ -590,22 +590,28 @@ func (s *Server) CancleVerificationRequest(ctx context.Context, payload CancelRe
 	if err != nil {
 		return CancelRequest500Response{"Failed to cancel request", false}, err
 	}
-	fmt.Println("IssuerId", s.cfg.APIUI.IssuerDID)
-	cred, err := s.claimService.GetByID(ctx, &s.cfg.APIUI.IssuerDID, payload.Body.Id)
+
+	req,err := s.requestServer.GetRequest(ctx, payload.Body.Id)
 	if err != nil {
 		return nil, err
 	}
-	w3c, err := schema.FromClaimModelToW3CCredential(*cred)
-	fmt.Println("Credential :", cred)
-	res, err := s.verifierServer.GetAuthRequest(ctx, cred.SchemaType, cred.SchemaURL, w3c.CredentialSubject)
-	if err != nil {
-		return nil, err
-	}
+
+	// fmt.Println("IssuerId", s.cfg.APIUI.IssuerDID)
+	// cred, err := s.claimService.GetByID(ctx, &s.cfg.APIUI.IssuerDID, payload.Body.Id)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// w3c, err := schema.FromClaimModelToW3CCredential(*cred)
+	// fmt.Println("Credential :", cred)
+	// res, err := s.verifierServer.GetAuthRequest(ctx, cred.SchemaType, cred.SchemaURL, w3c.CredentialSubject)
+	// if err != nil {
+	// 	return nil, err
+	// }
 	n := `Verification of VC ` + payload.Body.Id.String() + ` has been cancelled`
-	un := `User ` + res.To + ` rejected verification of VC ` + payload.Body.Id.String() + ``
+	un := `User ` + req.UserDID + ` rejected verification of VC ` + payload.Body.Id.String() + ``
 	issuernotification := &domain.NotificationData{
 		ID:                  uuid.New(),
-		User_id:             res.To,
+		User_id:             req.UserDID,
 		Module:              "Verifier",
 		NotificationType:    "Verification of VC",
 		NotificationTitle:   "Verification of VC Rejected",
@@ -614,7 +620,7 @@ func (s *Server) CancleVerificationRequest(ctx context.Context, payload CancelRe
 	_, err = s.requestServer.NewNotification(ctx, issuernotification)
 	usernotification := &domain.NotificationData{
 		ID:                  uuid.New(),
-		User_id:             res.To,
+		User_id:             req.UserDID,
 		Module:              "User",
 		NotificationType:    "Verification of VC",
 		NotificationTitle:   "Verification of VC Rejected",
