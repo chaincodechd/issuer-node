@@ -309,39 +309,81 @@ func (s *Server) RequestForVC(ctx context.Context, request VCRequestObject) (VCR
 		Age:            request.Body.Age,
 		Source:         request.Body.Source}
 
-	id, err := s.requestServer.CreateRequest(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	n := `Request ` + id.String() + ` of type ` + request.Body.RequestType + ` has been created Successfully`
-	issuernotification := &domain.NotificationData{
-		ID:                  uuid.New(),
-		User_id:             request.Body.UserDID,
-		Module:              "Issuer",
-		NotificationType:    "Requested for VC",
-		NotificationTitle:   "Requested for VC",
-		NotificationMessage: n,
+	if request.Body.RequestType == "GenerateNewVC" {
+
+		id, err := s.requestServer.CreateRequest(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		un := `Request ` + id.String() + ` of type ` + request.Body.RequestType + ` has been created Successfully`
+		n := `User ` + request.Body.UserDID + ` has requested for VC of type ` + request.Body.RequestType + ``
+		issuernotification := &domain.NotificationData{
+			ID:                  uuid.New(),
+			User_id:             request.Body.UserDID,
+			Module:              "Issuer",
+			NotificationType:    "Requested for VC",
+			NotificationTitle:   "Requested for VC",
+			NotificationMessage: n,
+		}
+
+		usernotification := &domain.NotificationData{
+			ID:                  uuid.New(),
+			User_id:             request.Body.UserDID,
+			Module:              "User",
+			NotificationType:    "Requested for VC",
+			NotificationTitle:   "Requested for VC",
+			NotificationMessage: un,
+		}
+
+		_, err = s.requestServer.NewNotification(ctx, issuernotification)
+		if err != nil {
+			return nil, err
+		}
+		_, err = s.requestServer.NewNotification(ctx, usernotification)
+		if err != nil {
+			return nil, err
+		}
+
+		return VC200Response{"Requested Successfully", id}, nil
+	} else if request.Body.RequestType == "VerifyVC" {
+
+		id, err := s.requestServer.CreateRequestForVerification(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+
+		un := `Verifier wants you to verify credential ` + id.String() + ` `
+		n := `Request ` + id.String() + ` of type ` + request.Body.RequestType + ` has been created Successfully`
+		verifiernotification := &domain.NotificationData{
+			ID:                  uuid.New(),
+			User_id:             request.Body.UserDID,
+			Module:              "Verifier",
+			NotificationType:    "Requested Successfully for VC",
+			NotificationTitle:   "Requested Successfully for VC",
+			NotificationMessage: n,
+		}
+
+		usernotification := &domain.NotificationData{
+			ID:                  uuid.New(),
+			User_id:             request.Body.UserDID,
+			Module:              "User",
+			NotificationType:    "Requested for Verify Credential",
+			NotificationTitle:   "Requested for Verify Credential",
+			NotificationMessage: un,
+		}
+		_, err = s.requestServer.NewNotification(ctx, verifiernotification)
+		if err != nil {
+			return nil, err
+		}
+		_, err = s.requestServer.NewNotification(ctx, usernotification)
+		if err != nil {
+			return nil, err
+		}
+		return VC200Response{"Requested Successfully", id}, nil
+	} else {
+		return VC500Response{"Invalid Request Type"}, nil
 	}
 
-	usernotification := &domain.NotificationData{
-		ID:                  uuid.New(),
-		User_id:             request.Body.UserDID,
-		Module:              "User",
-		NotificationType:    "Requested for VC",
-		NotificationTitle:   "Requested for VC",
-		NotificationMessage: n,
-	}
-
-	_, err = s.requestServer.NewNotification(ctx, issuernotification)
-	if err != nil {
-		return nil, err
-	}
-	_, err = s.requestServer.NewNotification(ctx, usernotification)
-	if err != nil {
-		return nil, err
-	}
-
-	return VC200Response{"Requested Successfully", id}, nil
 }
 
 func (s *Server) GenerateVC(ctx context.Context, request GenerateVCRequestObject) (CreateCredentialResponseObject, error) {
@@ -498,7 +540,7 @@ func (s *Server) DeleteNotification(ctx context.Context, id uuid.UUID) (DeleteNo
 	return result, nil
 }
 
-func (s *Server) CreateAuthRequest(ctx context.Context, id uuid.UUID) (CreateAuthRequestResponse, error) {
+func (s *Server) CreateAuthRequest(ctx context.Context, id uuid.UUID, reqId uuid.UUID) (CreateAuthRequestResponse, error) {
 	// var resp GetRequestResponse = (GetRequestResponse(GetRequest200Response("Request print at log")));
 	fmt.Println("IssuerId", s.cfg.APIUI.IssuerDID)
 	cred, err := s.claimService.GetByID(ctx, &s.cfg.APIUI.IssuerDID, id)
@@ -518,7 +560,7 @@ func (s *Server) CreateAuthRequest(ctx context.Context, id uuid.UUID) (CreateAut
 	}
 
 	n := `Credential ` + id.String() + ` has been Verified Successfully`
-	un := `User` + res.To + `verified credential` + id.String() + `Successfully`
+	un := `User ` + res.To + ` verified credential ` + id.String() + ` Successfully`
 	issuernotification := &domain.NotificationData{
 		ID:                  uuid.New(),
 		User_id:             res.To,
@@ -539,7 +581,7 @@ func (s *Server) CreateAuthRequest(ctx context.Context, id uuid.UUID) (CreateAut
 	_, err = s.requestServer.NewNotification(ctx, usernotification)
 	// msgBytes, _ := json.Marshal(res)
 
-	_, err = s.requestServer.UpdateStatus(ctx, id, "VC accepted", "VC verified", "VC accepted")
+	_, err = s.requestServer.UpdateStatus(ctx, reqId, "VC Accepted", "VC Verified", "VC Accepted")
 	return resp, nil
 }
 
@@ -548,6 +590,37 @@ func (s *Server) CancleVerificationRequest(ctx context.Context, payload CancelRe
 	if err != nil {
 		return CancelRequest500Response{"Failed to cancel request", false}, err
 	}
+	fmt.Println("IssuerId", s.cfg.APIUI.IssuerDID)
+	cred, err := s.claimService.GetByID(ctx, &s.cfg.APIUI.IssuerDID, payload.Body.Id)
+	if err != nil {
+		return nil, err
+	}
+	w3c, err := schema.FromClaimModelToW3CCredential(*cred)
+	fmt.Println("Credential :", cred)
+	res, err := s.verifierServer.GetAuthRequest(ctx, cred.SchemaType, cred.SchemaURL, w3c.CredentialSubject)
+	if err != nil {
+		return nil, err
+	}
+	n := `Verification of VC ` + payload.Body.Id.String() + ` has been cancelled`
+	un := `User ` + res.To + ` rejected verification of VC ` + payload.Body.Id.String() + ``
+	issuernotification := &domain.NotificationData{
+		ID:                  uuid.New(),
+		User_id:             res.To,
+		Module:              "Verifier",
+		NotificationType:    "Verification of VC",
+		NotificationTitle:   "Verification of VC Rejected",
+		NotificationMessage: un,
+	}
+	_, err = s.requestServer.NewNotification(ctx, issuernotification)
+	usernotification := &domain.NotificationData{
+		ID:                  uuid.New(),
+		User_id:             res.To,
+		Module:              "User",
+		NotificationType:    "Verification of VC",
+		NotificationTitle:   "Verification of VC Rejected",
+		NotificationMessage: n,
+	}
+	_, err = s.requestServer.NewNotification(ctx, usernotification)
 	return CancelRequest200Response{"Request cancelled Successfully", true}, nil
 }
 

@@ -27,6 +27,7 @@ type RequestService interface {
 	SignUp(ctx context.Context, user *domain.SignUpRequest) (bool,error)
 	SignIn(ctx context.Context, username string, password string) (*domain.LoginResponse,error)
 	UpdateVerificationStatus(ctx context.Context,id string,field string, status bool) (int64,error)
+	CreateRequestForVerification(ctx context.Context, req domain.VCRequest) (uuid.UUID, error)
 
 	// Save(ctx context.Context, conn db.Querier, connection *domain.Request) error
 	// GetByID(ctx context.Context, conn db.Querier, id uuid.UUID)

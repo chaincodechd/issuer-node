@@ -3747,6 +3747,7 @@ type GetRequestByUser struct{
 
 type CreateRequestObject struct {
 	CredId uuid.UUID `json:"cred_id"`
+	RequestId uuid.UUID `json:"request_id"`
 }
 
 type callbackRequestBody struct{
@@ -4378,7 +4379,7 @@ type StrictServerInterface interface {
 
 	SignIn(ctx context.Context, request GetUserRequestObject)(GetLoginResponseObject,error)
 
-	CreateAuthRequest(ctx context.Context,credId uuid.UUID)(CreateAuthRequestResponse,error)
+	CreateAuthRequest(ctx context.Context,credId uuid.UUID,requestId uuid.UUID)(CreateAuthRequestResponse,error)
 
 	Callback(ctx context.Context, request callbackRequestObject)(VerifyAuthResponseObject,error)
 
@@ -4934,7 +4935,7 @@ func (sh *strictHandler) CreateAuthRequest(w http.ResponseWriter, r *http.Reques
 
 	req = body
 	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
-		return sh.ssi.CreateAuthRequest(ctx, req.CredId)
+		return sh.ssi.CreateAuthRequest(ctx, req.CredId,req.RequestId)
 	}
 	for _, middleware := range sh.middlewares {
 		handler = middleware(handler, "CreateAuthRequest")

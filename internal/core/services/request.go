@@ -75,6 +75,39 @@ func (r *requests) CreateRequest(ctx context.Context, req domain.VCRequest) (uui
 	return _req.ID, err
 }
 
+func (r *requests) CreateRequestForVerification(ctx context.Context, req domain.VCRequest) (uuid.UUID, error) {
+
+	_req := &domain.Request{
+		ID:             uuid.New(),
+		User_id:        req.UserDID,
+		Schema_id:      req.SchemaID,
+		Issuer_id:      req.UserDID,
+		Active:         true,
+		Status:         "VC Verification Pending",
+		Verify_Status:  "VC verification pending",
+		Wallet_Status:  "VC Verification Pending",
+		CredentialType: req.CredentialType,
+		Type:           req.RequestType,
+		RoleType:       req.RoleType,
+		ProofType:      req.ProofType,
+		ProofId:        req.ProofId,
+		Age:            req.Age,
+		Source:         req.Source,
+	}
+	err := r.reqRepo.Save(ctx, r.storage.Pgx, _req)
+	if err != nil {
+		return uuid.Nil, err
+	}
+
+	return _req.ID, err
+}
+
+
+
+
+
+
+
 func (r *requests) GetRequest(ctx context.Context, Id uuid.UUID) (domain.Responce, error) {
 
 	res, err := r.reqRepo.GetByID(ctx, r.storage.Pgx, Id)
