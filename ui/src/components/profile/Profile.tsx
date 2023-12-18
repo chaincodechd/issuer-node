@@ -41,6 +41,8 @@ export function Profile() {
   const { fullName, gmail, userDID, userType } = useUserContext();
   // const userDID = localStorage.getItem("userId");
   // console.log(userDID)
+  // console.log(userType);
+
   const [countdown, setCountdown] = useState(300); // 5 minutes in seconds
   const [openVerificationModal, setOpenVerificationModal] = useState<boolean>(false);
   const [openModal, setOpenModal] = useState<boolean>(false);
@@ -63,6 +65,56 @@ export function Profile() {
     phoneNumber: userProfileData?.phoneNumber || "",
     userType: userProfileData?.userType || "",
   });
+
+  useEffect(() => {
+    if (ProfileStatus === "true") {
+      const getUserDetails = async () => {
+        const response = await getUser({
+          env,
+          userDID,
+        });
+        /* eslint-disable */
+        setUserProfileData(response.data);
+        /* eslint-enable */
+        {
+          /* eslint-disable */
+        }
+
+        setFormValues({
+          dob: response.data.dob,
+          Aadhar: response.data.adhar,
+          PAN: response.data.PAN,
+          owner: response.data.owner,
+          gst: response.data.gstin,
+          address: response.data.address,
+          mobile: response.data.phoneNumber,
+          DocumentationSource: response.data.documentationSource,
+          Owner: response.data.owner,
+          userType: response.data.userType,
+        });
+        {
+          /* eslint-disable */
+        }
+      };
+      getUserDetails().catch((e) => {
+        console.error("An error occurred:", e);
+      });
+    }
+
+    let timer: NodeJS.Timeout;
+    if (openVerificationModal) {
+      timer = setInterval(() => {
+        setCountdown((prevCountdown) => prevCountdown - 1);
+        if (countdown === 0) {
+          clearInterval(timer);
+          setOpenVerificationModal(false);
+        }
+      }, 1000);
+    }
+    return () => {
+      clearInterval(timer);
+    };
+  }, [ProfileStatus, userDID, env, openVerificationModal, countdown]);
 
   const handleCancel = () => {
     setOpenModal(false);
@@ -117,6 +169,9 @@ export function Profile() {
       if (response.success) {
         const updatePayload = {
           Address: "xyz",
+          AdharStatus: true,
+          PANStatus: true,
+          GstinStatus: true,
           Adhar: "894365783749",
           DOB: response.data.result.userDetails.dob,
           DocumentationSource: "digilocker",
@@ -196,54 +251,6 @@ export function Profile() {
     //console.log("User logged out");
     setOpenVerificationModal(false);
   };
-
-  useEffect(() => {
-    if (ProfileStatus === "true") {
-      const getUserDetails = async () => {
-        const response = await getUser({
-          env,
-          userDID,
-        });
-        /* eslint-disable */
-        setUserProfileData(response.data);
-        /* eslint-enable */
-        {
-          /* eslint-disable */
-        }
-        setFormValues({
-          dob: response.data.dob,
-          Aadhar: response.data.adhar,
-          PAN: response.data.PAN,
-          owner: response.data.owner,
-          gst: response.data.gstin,
-          address: response.data.address,
-          mobile: response.data.phoneNumber,
-          DocumentationSource: response.data.documentationSource,
-          Owner: response.data.owner,
-        });
-        {
-          /* eslint-disable */
-        }
-      };
-      getUserDetails().catch((e) => {
-        console.error("An error occurred:", e);
-      });
-    }
-
-    let timer: NodeJS.Timeout;
-    if (openVerificationModal) {
-      timer = setInterval(() => {
-        setCountdown((prevCountdown) => prevCountdown - 1);
-        if (countdown === 0) {
-          clearInterval(timer);
-          setOpenVerificationModal(false);
-        }
-      }, 1000);
-    }
-    return () => {
-      clearInterval(timer);
-    };
-  }, [ProfileStatus, userDID, env, openVerificationModal, countdown]);
 
   // Calculate minutes and seconds
   const minutes = Math.floor(countdown / 60);
@@ -372,10 +379,18 @@ export function Profile() {
                   <Typography.Text>: {userProfileData?.dob}</Typography.Text>
                 </Row>
                 <Row style={{ marginTop: "10px" }}>
-                  <Checkbox value="Individual" checked={userProfileData?.userType === "Individual"}>
+                  <Checkbox
+                    value="Individual"
+                    checked={
+                      userProfileData?.userType === "Individual" || userType === "Individual"
+                    }
+                  >
                     <strong>Individual</strong>
                   </Checkbox>
-                  <Checkbox value="Business" checked={userProfileData?.userType === "Business"}>
+                  <Checkbox
+                    value="Business"
+                    checked={userProfileData?.userType === "Business" || userType === "Business"}
+                  >
                     <strong>Business</strong>
                   </Checkbox>
                 </Row>

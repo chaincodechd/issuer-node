@@ -155,13 +155,13 @@ export const SignUp = () => {
             name="firstName"
             rules={[
               {
-                message: "Please input your First Name!",
+                message: "Please input your Full Name!",
                 required: true,
               },
             ]}
           >
             <Input
-              placeholder="First Name"
+              placeholder="Full Name"
               prefix={<UserOutlined className="site-form-item-icon" />}
             />
           </Form.Item>

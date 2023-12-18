@@ -30,7 +30,9 @@ export const Login = () => {
         });
 
         if (userDetails.success) {
+          console.log(userDetails.data);
           localStorage.setItem("user", values.username);
+          localStorage.setItem("userType", userDetails.data.userType);
           localStorage.setItem("profile", userDetails.data.iscompleted.toString());
           localStorage.setItem("userId", userDetails.data.userDID);
           navigate(generatePath(ROUTES.profile.path));

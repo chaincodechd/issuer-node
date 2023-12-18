@@ -9,6 +9,7 @@ export type Signup = {
   password: string;
   role: string;
   userDID: string;
+  userType: string;
   username: string;
 };
 

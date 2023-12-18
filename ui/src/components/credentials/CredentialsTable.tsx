@@ -41,7 +41,6 @@ import {
   ISSUED,
   ISSUE_DATE,
   QUERY_SEARCH_PARAM,
-  REQUEST_FOR_VC,
   REVOCATION,
   REVOKE,
   REVOKE_DATE,
@@ -76,7 +75,6 @@ export function CredentialsTable() {
   const credentialsList = isAsyncTaskDataAvailable(credentials) ? credentials.data : [];
   const showDefaultContent =
     credentials.status === "successful" && credentialsList.length === 0 && queryParam === null;
-
   let tableColumns: ColumnsType<Credential>;
   if (User === "issuer" || User === "verifier") {
     tableColumns = [
@@ -102,6 +100,18 @@ export function CredentialsTable() {
           </Tooltip>
         ),
         title: "Credential",
+        width: "20%",
+      },
+      {
+        dataIndex: "credentialSubject",
+        ellipsis: { showTitle: false },
+        key: "credentialSubject",
+        render: (credentialSubject: Credential["credentialSubject"]) => (
+          <Tooltip placement="topLeft" title={credentialSubject?.type}>
+            <Typography.Text strong>{credentialSubject?.type}</Typography.Text>
+          </Tooltip>
+        ),
+        title: "Credential Type",
         width: "20%",
       },
       {
@@ -187,7 +197,7 @@ export function CredentialsTable() {
                       {
                         // icon: <IconInfoCircle />,
                         key: "details",
-                        label: REQUEST_FOR_VC,
+                        label: "Request for VC Verification",
                         onClick: () => setVerifierVCRequest(credential),
                       },
                     ]
@@ -257,6 +267,18 @@ export function CredentialsTable() {
           </Tooltip>
         ),
         title: "Credential",
+        width: "20%",
+      },
+      {
+        dataIndex: "credentialSubject",
+        ellipsis: { showTitle: false },
+        key: "credentialSubject",
+        render: (credentialSubject: Credential["credentialSubject"]) => (
+          <Tooltip placement="topLeft" title={credentialSubject?.type}>
+            <Typography.Text strong>{credentialSubject?.type}</Typography.Text>
+          </Tooltip>
+        ),
+        title: "Credential Type",
         width: "20%",
       },
       {

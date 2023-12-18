@@ -40,7 +40,7 @@ type CredentialInput = Omit<Credential, "proofTypes" | "createdAt" | "expiresAt"
 export const credentialParser = getStrictParser<CredentialInput, Credential>()(
   z.object({
     createdAt: datetimeParser,
-    credentialSubject: z.record(z.unknown()),
+    credentialSubject: z.record(z.any()),
     expired: z.boolean(),
     expiresAt: datetimeParser.nullable(),
     id: z.string(),

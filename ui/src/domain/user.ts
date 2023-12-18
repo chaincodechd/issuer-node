@@ -27,14 +27,17 @@ export type UserDetails = {
 export type userProfile = {
   Address: string;
   Adhar: string;
+  AdharStatus: boolean;
   DOB: Date;
   DocumentationSource: string;
   Gmail: string;
   Gstin: string;
+  GstinStatus: boolean;
   ID: string;
   Name: string;
   Owner: string;
   PAN: string;
+  PANStatus: boolean;
   PhoneNumber: string;
 };
 export type FormValue = {

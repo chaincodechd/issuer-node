@@ -258,16 +258,16 @@ export function RequestsTable() {
         width: "20%",
       },
       {
-        dataIndex: "Active",
+        dataIndex: "wallet_status",
         ellipsis: { showTitle: false },
-        key: "status",
-        render: (status: Request["status"]) => (
-          <Tooltip placement="topLeft" title={status}>
-            <Typography.Text strong>{status ? "Active" : "-"}</Typography.Text>
+        key: "wallet_status",
+        render: (wallteStatus: Request["wallet_status"]) => (
+          <Tooltip placement="topLeft" title={wallteStatus}>
+            <Typography.Text strong>{wallteStatus}</Typography.Text>
           </Tooltip>
         ),
         title: "Status",
-        width: "10%",
+        width: "15%",
       },
       {
         dataIndex: "created_at",
